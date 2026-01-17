@@ -1,48 +1,63 @@
-# Analisis Teknis LinuxUI - Dokumentasi Lengkap
+# LinuxUI Technical Analysis - Complete Documentation
 
-> **Tanggal Analisis:** 10 Januari 2026  
-> **Tech Stack:** Vite 5.0, Vanilla JavaScript ES6, CSS3
-
----
-
-## Daftar Isi
-
-1. [Ikhtisar Arsitektur](#1-ikhtisar-arsitektur)
-2. [Struktur Direktori Proyek](#2-struktur-direktori-proyek)
-3. [Komponen Aplikasi](#3-komponen-aplikasi)
-4. [Arsitektur Data](#4-arsitektur-data)
-5. [Protokol Komunikasi & API](#5-protokol-komunikasi--api)
-6. [Sistem Keamanan & Autentikasi](#6-sistem-keamanan--autentikasi)
-7. [Hierarki Pemuatan Data](#7-hierarki-pemuatan-data-loading-priority)
-8. [Konfigurasi Aplikasi](#8-konfigurasi-aplikasi)
-9. [Rekomendasi Pengembangan](#9-rekomendasi-pengembangan)
+> **Analysis Date:** January 18, 2026  
+> **Tech Stack:** Vite 5.0, Node.js + Express, Socket.io, Vanilla JavaScript ES6, CSS3
 
 ---
 
-## 1. Ikhtisar Arsitektur
+## Table of Contents
 
-### 1.1 Deskripsi Umum
+1. [Architecture Overview](#1-architecture-overview)
+2. [Project Directory Structure](#2-project-directory-structure)
+3. [Application Components](#3-application-components)
+4. [Data Architecture](#4-data-architecture)
+5. [Communication Protocols & API](#5-communication-protocols--api)
+6. [Security & Authentication System](#6-security--authentication-system)
+7. [Data Loading Hierarchy](#7-data-loading-hierarchy-loading-priority)
+8. [Application Configuration](#8-application-configuration)
+9. [Development Recommendations](#9-development-recommendations)
 
-LinuxUI adalah aplikasi **simulasi desktop Linux berbasis web** yang berjalan sepenuhnya di sisi klien (frontend-only). Aplikasi ini meniru tampilan dan fungsionalitas sistem operasi desktop dengan komponen-komponen seperti:
+---
 
-- **Window Manager** untuk pengelolaan jendela
-- **Desktop Environment** dengan ikon dan grid system
-- **Taskbar** dengan start menu, tray icons, dan calendar
-- **Multiple Applications** (Explorer, Terminal, Settings, dll.)
+## 1. Architecture Overview
 
-### 1.2 Diagram Arsitektur
+### 1.1 General Description
+
+LinuxUI is a **web-based Linux desktop simulation** application with **full-stack** architecture:
+- **Frontend:** Vite + Vanilla JavaScript (ES Modules)
+- **Backend:** Node.js + Express + Socket.io
+
+The application mimics the appearance and functionality of a desktop operating system with components such as:
+
+- **Window Manager** for window management
+- **Desktop Environment** with icons and grid system
+- **Taskbar** with start menu, tray icons, and calendar
+- **Multiple Applications** (Explorer, Terminal, Settings, etc.)
+- **Real Terminal** using xterm.js + node-pty
+
+### 1.2 Architecture Diagram
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer (Browser)"
+    subgraph "Frontend Layer (Vite - Port 3000)"
         HTML[index.html]
         MAIN[main.js - Entry Point]
         
-        subgraph "Core Modules"
+        subgraph "System Components"
             WM[WindowManager]
             LS[LockScreen]
             DT[Desktop]
             TB[Taskbar]
+            DLG[Dialogs]
+        end
+        
+        subgraph "System Library"
+            AUTH[AuthService]
+            API[ApiClient]
+            AREG[AppRegistry]
+            ALDR[AppLoader]
+            SAPI[SystemAPI]
+            FSS[FileSystemService]
         end
         
         subgraph "Applications"
@@ -53,184 +68,241 @@ graph TB
             MC[MediaCenter]
             TE[TextEditor]
         end
+    end
+    
+    subgraph "Backend Layer (Express - Port 8000)"
+        SRV[server.js]
         
-        subgraph "System Services"
-            FS[FileSystem.js]
+        subgraph "Core"
+            APLDR[AppLoader.js]
+            SKLDR[SocketLoader.js]
         end
         
-        subgraph "Styles"
-            CSS[global.css]
-            ACSS[App-specific CSS]
+        subgraph "Routes"
+            AUTHRT[Auth Routes]
+            APPRT[App Routes - Auto-loaded]
         end
+        
+        subgraph "Services"
+            PTY[node-pty]
+            SIO[Socket.io]
+        end
+    end
+    
+    subgraph "Storage"
+        CFG[(configs/)]
+        WP[(wallpaper/)]
     end
     
     HTML --> MAIN
     MAIN --> WM & LS & DT & TB
-    MAIN --> EXP & TRM & SET & TM & MC & TE
-    EXP --> FS
-    DT --> WM
-    TB --> WM
+    MAIN --> ALDR --> AREG
+    AREG --> EXP & TRM & SET & TM & MC & TE
+    
+    AUTH --> AUTHRT
+    TRM --> SIO --> PTY
+    EXP --> APPRT
+    
+    SRV --> CFG & WP
 ```
 
 ### 1.3 Technology Stack
 
-| Komponen        | Teknologi                        | Versi   |
-| --------------- | -------------------------------- | ------- |
-| Build Tool      | Vite                             | ^5.0.0  |
-| Package Manager | npm                              | -       |
-| Language        | Vanilla JavaScript (ES6 Modules) | ES2020+ |
-| Styling         | CSS3 + CSS Custom Properties     | -       |
-| Module System   | ES Modules                       | Native  |
+| Component         | Technology                       | Version |
+| ----------------- | -------------------------------- | ------- |
+| Build Tool        | Vite                             | ^5.0.0  |
+| Backend Runtime   | Node.js                          | 18+     |
+| Backend Framework | Express                          | ^4.18.2 |
+| WebSocket         | Socket.io                        | ^4.x    |
+| Terminal Emulator | xterm.js                         | ^5.3.0  |
+| PTY Backend       | node-pty                         | ^1.0.0  |
+| Icons             | Phosphor Icons                   | ^2.1.2  |
+| Language          | Vanilla JavaScript (ES6 Modules) | ES2020+ |
+| Styling           | CSS3 + CSS Custom Properties     | -       |
 
 ---
 
-## 2. Struktur Direktori Proyek
+## 2. Project Directory Structure
 
 ```
 LinuxUI/
-├── index.html              # Entry point HTML
-├── package.json            # Dependensi & scripts npm
-├── package-lock.json       # Lock file
-├── vite.config.js          # Konfigurasi Vite
+├── index.html              # HTML entry point
+├── package.json            # Frontend dependencies
+├── vite.config.js          # Vite configuration + plugins
+├── vite-plugin-app-api.js  # Custom plugin for app API loading
+├── start_dev.sh            # Development startup script
 │
-└── src/
+├── server/                 # Backend (Node.js)
+│   ├── server.js           # Entry point Express + Socket.io
+│   ├── package.json        # Backend dependencies
+│   ├── core/
+│   │   ├── AppLoader.js    # Auto-load app routes & sockets
+│   │   └── SocketLoader.js # Socket.io namespace loader
+│   └── routes/             # Core server routes
+│
+├── storage/                # User data & assets
+│   ├── configs/            # JSON configs (explorer.json, system.json)
+│   └── wallpaper/          # Custom wallpapers
+│
+├── public/                 # Static assets (favicon, boot logo)
+│
+└── src/                    # Frontend (Vite)
     ├── main.js             # Application bootstrap
     │
-    ├── core/               # Modul inti sistem
-    │   ├── Desktop/
-    │   │   ├── Desktop.js
-    │   │   └── style.css
-    │   ├── LockScreen/
-    │   │   ├── LockScreen.js
-    │   │   └── style.css
-    │   ├── Taskbar/
-    │   │   ├── Taskbar.js
-    │   │   └── style.css
-    │   └── WindowManager/
-    │       └── WindowManager.js
+    ├── system/
+    │   ├── components/     # UI Components (Visual Layer)
+    │   │   ├── Desktop/
+    │   │   │   ├── Desktop.js
+    │   │   │   └── style.css
+    │   │   ├── LockScreen/
+    │   │   │   ├── LockScreen.js
+    │   │   │   ├── style.css
+    │   │   │   └── api/            # Backend auth routes
+    │   │   │       └── routes.js
+    │   │   ├── Taskbar/
+    │   │   │   ├── Taskbar.js
+    │   │   │   └── style.css
+    │   │   ├── WindowManager/
+    │   │   │   └── WindowManager.js
+    │   │   └── Dialogs/
+    │   │       └── BaseDialog.js
+    │   │
+    │   └── lib/            # Client-side Services (Logic Layer)
+    │       ├── ApiClient.js        # HTTP wrapper + auth headers
+    │       ├── AuthService.js      # Session token management
+    │       ├── AppLoader.js        # Dynamic app discovery
+    │       ├── AppRegistry.js      # App registration & launch
+    │       ├── SystemAPI.js        # Sandboxed API for apps
+    │       ├── FileSystem.js       # Virtual filesystem (legacy)
+    │       ├── FileSystemService.js # Real FS API bridge
+    │       ├── DialogService.js    # Modal dialog system
+    │       └── ExplorerService.js  # File browser utilities
     │
-    ├── apps/               # Aplikasi desktop
+    ├── apps/               # Modular Applications
     │   ├── Explorer/
-    │   │   ├── Explorer.js
-    │   │   └── style.css
-    │   ├── MediaCenter/
-    │   │   ├── MediaCenter.js
-    │   │   └── style.css
+    │   │   ├── Explorer.js         # Frontend UI (1380 lines)
+    │   │   ├── style.css
+    │   │   ├── manifest.js         # App metadata
+    │   │   └── api/routes.js       # Backend routes
+    │   │
+    │   ├── Terminal/
+    │   │   ├── Terminal.js         # xterm.js integration
+    │   │   ├── style.css
+    │   │   ├── manifest.js
+    │   │   ├── api/
+    │   │   │   ├── routes.js
+    │   │   │   └── socket.js       # Socket.io handlers
+    │   │   └── services/
+    │   │       └── TerminalSessionManager.js
+    │   │
     │   ├── Settings/
     │   │   ├── Settings.js
-    │   │   └── style.css
+    │   │   ├── style.css
+    │   │   ├── manifest.js
+    │   │   └── api/routes.js
+    │   │
     │   ├── TaskManager/
     │   │   ├── TaskManager.js
-    │   │   └── style.css
-    │   ├── Terminal/
-    │   │   ├── Terminal.js
-    │   │   └── style.css
+    │   │   ├── style.css
+    │   │   └── manifest.js
+    │   │
+    │   ├── MediaCenter/
+    │   │   ├── MediaCenter.js
+    │   │   ├── style.css
+    │   │   └── manifest.js
+    │   │
     │   └── TextEditor/
     │       ├── TextEditor.js
-    │       └── style.css
+    │       ├── style.css
+    │       └── manifest.js
     │
-    ├── system/             # System services
-    │   └── FileSystem.js
+    ├── styles/
+    │   └── global.css      # Global styles & CSS variables
     │
-    └── styles/
-        └── global.css      # Global styles & CSS variables
+    └── assets/             # Frontend assets
 ```
 
 ---
 
-## 3. Komponen Aplikasi
+## 3. Application Components
 
-### 3.1 Core Modules
+### 3.1 System Components (`src/system/components/`)
 
 #### 3.1.1 WindowManager
 
-| Property    | Deskripsi                                 |
-| ----------- | ----------------------------------------- |
-| **File**    | `src/core/WindowManager/WindowManager.js` |
-| **Lines**   | 127 lines                                 |
-| **Pattern** | Static Class (Singleton)                  |
+| Property    | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **File**    | `src/system/components/WindowManager/WindowManager.js` |
+| **Pattern** | Static Class (Singleton)                               |
 
-**Fungsionalitas:**
-- Manajemen Z-Index untuk window stacking
+**Functionality:**
+- Z-Index management for window stacking
 - Drag & drop window movement
 - Window states: open, close, minimize, maximize
-- Event delegation untuk mouse events
+- Multi-edge resize (all corners & edges)
+- Event delegation for mouse events
 
 **API Methods:**
 
 ```javascript
-WindowManager.init()              // Inisialisasi global listeners
-WindowManager.toggleWindow(id)    // Toggle visibility window
-WindowManager.openWindow(id)      // Buka window
-WindowManager.closeWindow(id)     // Tutup window
+WindowManager.init()              // Initialize global listeners
+WindowManager.toggleWindow(id)    // Toggle window visibility
+WindowManager.openWindow(id)      // Open window
+WindowManager.closeWindow(id)     // Close window
 WindowManager.maximizeWindow(id)  // Toggle maximize
 WindowManager.minimizeWindow(id)  // Minimize window
-WindowManager.bringToFront(el)    // Naikkan z-index
-WindowManager.startDrag(e, id)    // Mulai drag
-WindowManager.dragElement(e)      // Handler drag movement
-WindowManager.stopDrag()          // Akhiri drag
-```
-
-**State Management:**
-
-```javascript
-static zIndexCounter = 100;  // Counter untuk z-index
-static isDragging = false;   // Flag status dragging
-static dragData = {          // Data untuk drag operation
-    startX: 0, 
-    startY: 0, 
-    initialLeft: 0, 
-    initialTop: 0, 
-    currentWindow: null 
-};
+WindowManager.bringToFront(el)    // Raise z-index
 ```
 
 ---
 
 #### 3.1.2 LockScreen
 
-| Property    | Deskripsi                           |
-| ----------- | ----------------------------------- |
-| **File**    | `src/core/LockScreen/LockScreen.js` |
-| **Lines**   | 71 lines                            |
-| **Pattern** | Static Class                        |
+| Property    | Description                                      |
+| ----------- | ------------------------------------------------ |
+| **File**    | `src/system/components/LockScreen/LockScreen.js` |
+| **Lines**   | 131 lines                                        |
+| **Pattern** | Static Class                                     |
 
-**Fungsionalitas:**
-- Layar kunci dengan input password
-- Animasi unlock (slide up)
-- Shake animation untuk password salah
+**Functionality:**
+- Lock screen with password input
+- **AuthService integration** for token management
+- Unlock animation (slide up)
+- Shake animation for wrong password
+- Offline fallback mode
 
 **API Methods:**
 
 ```javascript
-LockScreen.mount(container)    // Render lockscreen ke container
+LockScreen.mount(container)    // Render lockscreen to container
 LockScreen.attachListeners()   // Setup event handlers
-LockScreen.checkUnlock(e)      // Handler Enter key
-LockScreen.performUnlock()     // Validasi & unlock
+LockScreen.checkUnlock(e)      // Handle Enter key
+LockScreen.performUnlock()     // Validate via AuthService & unlock
+LockScreen.performLock()       // Lock screen & invalidate token
+LockScreen.showError(message)  // Display error message
 ```
 
-**Autentikasi (Mock):**
+**Event Dispatching:**
 ```javascript
-// Password yang diterima:
-// - "123" (demo password)
-// - "" (empty untuk demo mode)
+// Fired after successful unlock
+document.dispatchEvent(new CustomEvent('system:unlock'));
 ```
 
 ---
 
 #### 3.1.3 Desktop
 
-| Property    | Deskripsi                     |
-| ----------- | ----------------------------- |
-| **File**    | `src/core/Desktop/Desktop.js` |
-| **Lines**   | 354 lines                     |
-| **Pattern** | Static Class                  |
+| Property    | Description                                |
+| ----------- | ------------------------------------------ |
+| **File**    | `src/system/components/Desktop/Desktop.js` |
+| **Lines**   | 343 lines                                  |
+| **Pattern** | Static Class                               |
 
-**Fungsionalitas:**
+**Functionality:**
 - Grid-based icon placement (20x10 grid)
-- Icon drag & drop dengan snap-to-grid
+- Icon drag & drop with snap-to-grid
 - Context menu (right-click)
-- Desktop shortcuts management
+- **Dynamic icons via AppRegistry**
 
 **API Methods:**
 
@@ -238,138 +310,159 @@ LockScreen.performUnlock()     // Validasi & unlock
 Desktop.mount(container)              // Render desktop
 Desktop.initializeGrid()              // Setup grid system
 Desktop.placeIconAtGrid(icon, col, row)  // Place icon
-Desktop.getGridFromPosition(x, y)     // Koordinat ke grid cell
-Desktop.findNearestFreeCell(col, row) // Cari cell kosong
+Desktop.getGridFromPosition(x, y)     // Coordinates to grid cell
+Desktop.findNearestFreeCell(col, row) // Find empty cell
 Desktop.attachListeners()             // Event handlers
-Desktop.closeAllMenus()               // Tutup context menus
+Desktop.closeAllMenus()               // Close context menus
 Desktop.handleContextAction(action)   // Handle context menu
-Desktop.handleIconAction(action)      // Handle icon actions
 Desktop.arrangeIcons()                // Auto-arrange icons
-```
-
-**Konfigurasi Grid:**
-```javascript
-static GRID_SIZE = 100;  // Ukuran cell dalam pixel
-static GRID_COLS = 20;   // Jumlah kolom
-static GRID_ROWS = 10;   // Jumlah baris
-static occupiedCells = new Set();  // Cell yang terpakai
 ```
 
 ---
 
 #### 3.1.4 Taskbar
 
-| Property    | Deskripsi                     |
-| ----------- | ----------------------------- |
-| **File**    | `src/core/Taskbar/Taskbar.js` |
-| **Lines**   | 595 lines                     |
-| **Pattern** | Static Class                  |
+| Property    | Description                                |
+| ----------- | ------------------------------------------ |
+| **File**    | `src/system/components/Taskbar/Taskbar.js` |
+| **Lines**   | 759 lines                                  |
+| **Pattern** | Static Class                               |
 
-**Fungsionalitas:**
-- Start menu dengan pencarian aplikasi
+**Functionality:**
+- Start menu with application search
+- **Dynamic app icons via AppRegistry**
 - System tray (WiFi, Volume, Battery)
-- Calendar widget denga navigasi bulan
+- Calendar widget with month navigation
 - Quick notes
 - Real-time clock
+- **Window preview on hover**
 
 **API Methods:**
 
 ```javascript
 Taskbar.mount(container)             // Render taskbar
 Taskbar.attachListeners()            // Event handlers
-Taskbar.addNote(text)                // Tambah note
-Taskbar.closeAllPopups()             // Tutup semua popup
+Taskbar.addNote(text)                // Add note
+Taskbar.closeAllPopups()             // Close all popups
 Taskbar.togglePopup(id)              // Toggle popup visibility
-Taskbar.startClock()                 // Jalankan clock updater
+Taskbar.startClock()                 // Run clock updater
 Taskbar.renderCalendar(date)         // Render calendar grid
-Taskbar.prevMonth() / nextMonth()    // Navigasi kalender
-Taskbar.showAppContextMenu(e, card)  // Context menu aplikasi
-Taskbar.handleAppContextAction(action)  // Handle context
-Taskbar.addIconToDesktop(appId, appName)  // Pin to desktop
+Taskbar.showWindowPreview(...)       // Show running instances
+Taskbar.openNewAppWindow(appType)    // Launch new instance
 ```
 
 ---
 
-### 3.2 Applications
+### 3.2 System Library (`src/system/lib/`)
 
-#### 3.2.1 Explorer (File Manager)
+| File                   | Lines | Description                                 |
+| ---------------------- | ----- | ------------------------------------------- |
+| `ApiClient.js`         | 80    | HTTP wrapper with auto-auth headers         |
+| `AuthService.js`       | 111   | Session token management (unlock/lock)      |
+| `AppLoader.js`         | ~90   | Dynamic app discovery from `src/apps/`      |
+| `AppRegistry.js`       | 134   | App registration, launch, & icon generation |
+| `SystemAPI.js`         | ~150  | Sandboxed API for each app                  |
+| `FileSystem.js`        | ~80   | Virtual filesystem (legacy fallback)        |
+| `FileSystemService.js` | ~150  | Real filesystem API bridge                  |
+| `DialogService.js`     | ~400  | Modal dialog system                         |
+| `ExplorerService.js`   | ~80   | File browser utilities                      |
 
-| Property    | Deskripsi                       |
-| ----------- | ------------------------------- |
-| **File**    | `src/apps/Explorer/Explorer.js` |
-| **Lines**   | 799 lines                       |
-| **Pattern** | Static Class                    |
+---
 
-**Fitur:**
-- Navigasi filesystem virtual
-- Breadcrumb navigation
-- Dual view mode (grid/list)
-- Context menu dengan operasi file
-- File tooltips dengan info detail
-- Network connection simulator
-- Clipboard (cut/copy/paste)
+### 3.3 Applications
 
-**State:**
+#### 3.3.1 App Manifest Structure
+
+Each application has a `manifest.js` file defining its metadata:
+
 ```javascript
-static currentPath = '/home/user';  // Path aktif
-static contextTarget = null;        // Target context menu
-static viewMode = 'grid';           // grid | list
-static showHidden = false;          // Show hidden files
-static clipboard = null;            // Clipboard data
-static clipboardAction = null;      // cut | copy
+// src/apps/Explorer/manifest.js
+export default {
+    id: 'explorer',
+    name: 'File Explorer',
+    shortName: 'Explorer',
+    icon: 'ph-folder',
+    iconPath: '<path d="M..."/>',
+    color: '#FFB900',
+    showOnDesktop: true,
+    showOnTaskbar: true,
+    permissions: ['filesystem', 'dialog', 'storage'],
+    createInstance: async (options, systemAPI) => {
+        const { Explorer } = await import('./Explorer.js');
+        return Explorer.createNewInstance(options);
+    }
+};
 ```
 
-**File Operations:**
+#### 3.3.2 Explorer (File Manager)
+
+| Property    | Description                     |
+| ----------- | ------------------------------- |
+| **File**    | `src/apps/Explorer/Explorer.js` |
+| **Lines**   | 1380 lines                      |
+| **Pattern** | Static Class + Multi-instance   |
+
+**Features:**
+- Filesystem navigation (real backend or virtual)
+- Breadcrumb navigation
+- Dual view mode (grid/list)
+- Context menu with file operations
+- File tooltips with detailed info
+- Network connection (FTP via basic-ftp)
+- Clipboard (cut/copy/paste)
+- **API routes available**
+
+**Instance State:**
+```javascript
+static instances = new Map();  // windowId -> { path, viewMode, etc }
+```
+
+**File Operations (via Backend):**
 - Open, Cut, Copy, Paste, Delete, Rename
 - New Folder, New File
 - Toggle Hidden Files
-- Connect to Network (mock)
+- Connect to Network (FTP)
 
 ---
 
-#### 3.2.2 Terminal
+#### 3.3.3 Terminal
 
-| Property    | Deskripsi                       |
+| Property    | Description                     |
 | ----------- | ------------------------------- |
 | **File**    | `src/apps/Terminal/Terminal.js` |
-| **Lines**   | 266 lines                       |
-| **Pattern** | Static Class                    |
+| **Lines**   | 376 lines                       |
+| **Pattern** | Static Class + Multi-instance   |
 
-**Fitur:**
-- Multi-tab terminal
-- Command history per tab
-- Built-in commands
+**Features:**
+- **Real PTY** via node-pty backend
+- **xterm.js** terminal emulator
+- Multi-tab terminal per window
+- WebSocket communication via Socket.io
+- Auto-resize with FitAddon
 
-**Commands Tersedia:**
+**Architecture:**
 ```
-help     - Tampilkan daftar perintah
-clear    - Bersihkan terminal
-date     - Tampilkan tanggal/waktu
-ls/list  - List direktori
-pwd      - Print working directory
-whoami   - Tampilkan user
-uname    - System information
-neofetch - System info dengan ASCII art
-exit     - Tutup tab
-cd       - Change directory
-cat      - Display file content
-echo     - Echo text
+Frontend (xterm.js) ←→ Socket.io ←→ Backend (node-pty)
 ```
+
+**Key Files:**
+- `Terminal.js` - Frontend UI
+- `api/socket.js` - Socket.io handlers
+- `services/TerminalSessionManager.js` - PTY session management
 
 ---
 
-#### 3.2.3 Settings
+#### 3.3.4 Settings
 
-| Property    | Deskripsi                       |
+| Property    | Description                     |
 | ----------- | ------------------------------- |
 | **File**    | `src/apps/Settings/Settings.js` |
-| **Lines**   | 495 lines                       |
-| **Pattern** | Static Class                    |
+| **Pattern** | Static Class + Multi-instance   |
 
 **Sections:**
 - **System** - Info & About
 - **Display** - Resolution, brightness
-- **Personalization** - Themes, wallpaper
+- **Personalization** - Themes, wallpaper (with backend save)
 - **Network** - WiFi, Ethernet
 - **Apps** - Installed apps
 - **Privacy** - Security settings
@@ -379,13 +472,12 @@ echo     - Echo text
 
 ---
 
-#### 3.2.4 TaskManager
+#### 3.3.5 TaskManager
 
-| Property    | Deskripsi                             |
+| Property    | Description                           |
 | ----------- | ------------------------------------- |
 | **File**    | `src/apps/TaskManager/TaskManager.js` |
-| **Lines**   | 351 lines                             |
-| **Pattern** | Static Class                          |
+| **Pattern** | Static Class + Multi-instance         |
 
 **Tabs:**
 - **Processes** - Running processes (mock data)
@@ -393,521 +485,253 @@ echo     - Echo text
 - **Startup** - Autostart programs
 - **Services** - System services
 
-**Performance Monitoring:**
-```javascript
-static currentPerfTab = 'cpu';
-static cpuHistory = [];   // History data untuk grafik
-static memHistory = [];   // Memory history
-
-// Update interval: 1000ms
-startPerformanceMonitor()  // Random data generator
-renderMiniGraph(containerId, data, color)  // Canvas graphs
-```
-
 ---
 
-#### 3.2.5 MediaCenter
+#### 3.3.6 MediaCenter
 
-| Property    | Deskripsi                             |
+| Property    | Description                           |
 | ----------- | ------------------------------------- |
 | **File**    | `src/apps/MediaCenter/MediaCenter.js` |
-| **Lines**   | 310 lines                             |
-| **Pattern** | Static Class                          |
+| **Pattern** | Static Class + Multi-instance         |
 
-**Fitur:**
-- Media library dengan mock data
+**Features:**
+- Media library with mock data
 - Filter: All, Music, Videos, Photos
-- Media player bar dengan controls
-- Play/pause toggle
-
-**Mock Data Sample:**
-```javascript
-static mockMedia = [
-    { id: 1, name: 'Summer Vibes', artist: 'Chill Artist', 
-      type: 'music', thumb: '#1db954', duration: '3:45' },
-    // ... more items
-];
-```
+- Media player bar with controls
 
 ---
 
-#### 3.2.6 TextEditor
+#### 3.3.7 TextEditor
 
-| Property    | Deskripsi                           |
+| Property    | Description                         |
 | ----------- | ----------------------------------- |
 | **File**    | `src/apps/TextEditor/TextEditor.js` |
-| **Lines**   | 319 lines                           |
-| **Pattern** | Static Class                        |
+| **Pattern** | Static Class + Multi-instance       |
 
-**Fitur:**
+**Features:**
 - Basic text editing
 - File operations (New, Open, Save)
 - Edit operations (Undo, Cut, Copy, Paste)
 - Word wrap toggle
 - Line/column indicator
-- Status bar
-
-**State:**
-```javascript
-static currentFileName = 'Untitled';
-static isModified = false;
-static wordWrap = true;
-```
 
 ---
 
-## 4. Arsitektur Data
+## 4. Data Architecture
 
-### 4.1 FileSystem (Virtual)
+### 4.1 FileSystem
 
-> **Lokasi:** `src/system/FileSystem.js`
+**Virtual Filesystem (Legacy Fallback):**
+> **Location:** `src/system/lib/FileSystem.js`
 
-Sistem file virtual berbasis JavaScript object tree:
+Used when backend is unavailable.
 
-```javascript
-export const fileSystem = {
-    "home": {
-        "user": {
-            "Documents": {
-                "Work": {
-                    "Project_Alpha": {
-                        "Specs.docx": "file",
-                        "Assets": {
-                            "Logo.png": "file",
-                            "Banner.jpg": "file"
-                        }
-                    },
-                    "Report_2025.pdf": "file"
-                },
-                "Personal": { "Resume.pdf": "file" },
-                "Notes.txt": "file"
-            },
-            "Downloads": { ... },
-            "Music": { ... },
-            "Pictures": { ... },
-            "Videos": { ... },
-            "Desktop": {}
-        }
-    },
-    "mnt": {
-        "vol1": { "Backup_Data": {}, "Games": { ... } },
-        "linux-os": { "bin": {}, "etc": {}, "usr": {}, "var": {} }
-    }
-};
+**Real Filesystem API:**
+> **Location:** `src/system/lib/FileSystemService.js`
+
+Bridge to backend API for real file operations.
+
+### 4.2 Storage Folder
+
+```
+storage/
+├── configs/           # Application configs
+│   ├── explorer.json  # Explorer settings
+│   ├── system.json    # System preferences
+│   └── ...
+└── wallpaper/         # Custom wallpaper images
 ```
 
-**API:**
-```javascript
-FileSystem.resolvePath(path)  // Resolve path ke object node
-// Returns: object (folder contents) | null (not found)
-```
-
-### 4.2 Data Flow Diagram
+### 4.3 Data Flow Diagram
 
 ```mermaid
 flowchart LR
     subgraph "Data Sources"
         FS[(FileSystem.js<br/>Virtual FS)]
-        MOCK[(Mock Data<br/>In-memory)]
+        API[(Backend API<br/>Express)]
+        WS[(WebSocket<br/>Socket.io)]
+        STR[(Storage<br/>configs/)]
+    end
+    
+    subgraph "Services"
+        FSS[FileSystemService]
+        AUTH[AuthService]
+        APIC[ApiClient]
     end
     
     subgraph "Components"
         EXP[Explorer]
         TRM[Terminal]
-        TM[TaskManager]
-        MC[MediaCenter]
+        SET[Settings]
     end
     
-    FS --> EXP
-    FS --> TRM
-    MOCK --> TM
-    MOCK --> MC
+    FSS --> EXP
+    API --> FSS
+    WS --> TRM
+    STR --> SET
     
-    subgraph "State Storage"
-        SM[Static Class<br/>Properties]
-    end
-    
-    EXP & TRM & TM & MC --> SM
+    AUTH --> APIC
+    APIC --> API
 ```
 
-### 4.3 State Management Pattern
+### 4.4 State Management Pattern
 
-Aplikasi menggunakan **Static Class Properties** sebagai state store:
+Applications use **Multi-Instance Pattern** with Map:
 
-| Komponen    | State Location                                    | Persistence  |
-| ----------- | ------------------------------------------------- | ------------ |
-| Explorer    | `Explorer.currentPath`, `Explorer.clipboard`      | Session only |
-| Terminal    | `Terminal.commandHistory`, `Terminal.activeTabId` | Session only |
-| TaskManager | `TaskManager.cpuHistory`                          | Session only |
-| Settings    | `Settings.currentSection`                         | Session only |
+```javascript
+// Each app stores state per window
+static instances = new Map();  // windowId -> instanceState
 
-> ⚠️ **Catatan:** Tidak ada persistent storage (localStorage/IndexedDB) yang diimplementasikan saat ini.
+// Example state
+instances.set(windowId, {
+    path: '/home/user',
+    viewMode: 'grid',
+    socket: socketConnection,
+    terminal: xtermInstance
+});
+```
+
+| Component | State Storage                  | Persistence     |
+| --------- | ------------------------------ | --------------- |
+| Explorer  | `instances` Map + Backend      | ✅ Backend-saved |
+| Terminal  | `instances` Map                | Session only    |
+| Settings  | `instances` Map + localStorage | ✅ Partial       |
 
 ---
 
-## 5. Protokol Komunikasi & API
+## 5. Communication Protocols & API
 
-### 5.1 Status Implementasi Saat Ini
+### 5.1 Implementation Status
 
-> [!IMPORTANT]
-> **Aplikasi ini saat ini adalah frontend-only application.**  
-> Tidak ada komunikasi jaringan (HTTP/HTTPS, WebSocket, REST API) yang diimplementasikan.
+| Protocol      | Status        | Details                              |
+| ------------- | ------------- | ------------------------------------ |
+| HTTP REST API | ✅ Implemented | Express on port 8000                 |
+| WebSocket     | ✅ Implemented | Socket.io for Terminal               |
+| Auth API      | ✅ Implemented | `/api/auth/unlock`, `/api/auth/lock` |
+| File API      | ✅ Implemented | `/api/explorer/*`                    |
+| Settings API  | ✅ Implemented | `/api/settings/*`                    |
 
-| Protokol            | Status            | Catatan |
-| ------------------- | ----------------- | ------- |
-| HTTP/HTTPS REST API | ❌ Tidak Ada       | -       |
-| WebSocket           | ❌ Tidak Ada       | -       |
-| Fetch API           | ❌ Tidak Digunakan | -       |
-| Server-Sent Events  | ❌ Tidak Ada       | -       |
-| IndexedDB           | ❌ Tidak Ada       | -       |
-| LocalStorage        | ❌ Tidak Digunakan | -       |
+### 5.2 Server Entry Point
 
-### 5.2 Endpoint Placeholder (Future Implementation)
+**File:** `server/server.js`
 
-Berdasarkan struktur komponen, berikut endpoint yang **direncanakan/direkomendasikan**:
+```javascript
+const PORT = 8000;
 
-#### File System API
+// Core Routes
+app.use('/api/auth', authRoutes);
 
-| Method   | Endpoint               | Deskripsi               |
-| -------- | ---------------------- | ----------------------- |
-| `GET`    | `/api/fs/list?path=`   | List directory contents |
-| `GET`    | `/api/fs/read?path=`   | Read file content       |
-| `POST`   | `/api/fs/write`        | Write/create file       |
-| `POST`   | `/api/fs/mkdir`        | Create directory        |
-| `DELETE` | `/api/fs/delete?path=` | Delete file/folder      |
-| `POST`   | `/api/fs/move`         | Move/rename file        |
-| `POST`   | `/api/fs/copy`         | Copy file               |
+// App Routes (auto-loaded from each app's api/routes.js)
+await loadAppRoutes(app);  // Loads Explorer, Settings, etc.
 
-**Request/Response Example:**
-```http
-GET /api/fs/list?path=/home/user/Documents
-Authorization: Bearer <token>
+// WebSocket
+await loadAppSockets(io);  // Loads Terminal sockets
+```
 
-Response:
+### 5.3 API Endpoints
+
+#### Authentication API
+
+| Method | Endpoint           | Description              |
+| ------ | ------------------ | ------------------------ |
+| `POST` | `/api/auth/unlock` | Generate session token   |
+| `POST` | `/api/auth/lock`   | Invalidate session token |
+| `GET`  | `/api/health`      | Server health check      |
+
+**POST /api/auth/unlock:**
+```json
+// Request
+{ "password": "123", "clientId": "linuxui-web-client" }
+
+// Response
 {
-  "success": true,
-  "data": {
-    "path": "/home/user/Documents",
-    "items": [
-      { "name": "Work", "type": "directory", "size": null },
-      { "name": "Notes.txt", "type": "file", "size": 1024 }
-    ]
-  }
+    "success": true,
+    "token": "sess_abc123...",
+    "expiresAt": "2026-01-18T22:00:00Z",
+    "userId": "user",
+    "permissions": ["fs_read", "fs_write", "terminal"]
 }
 ```
 
-#### Terminal WebSocket API
+#### File System API (Explorer)
 
-| Event        | Direction     | Payload                             |
-| ------------ | ------------- | ----------------------------------- |
-| `connect`    | Client→Server | `{ tabId: string }`                 |
-| `command`    | Client→Server | `{ cmd: string, tabId: string }`    |
-| `output`     | Server→Client | `{ output: string, tabId: string }` |
-| `disconnect` | Bidirectional | `{ tabId: string }`                 |
+| Method   | Endpoint                   | Description        |
+| -------- | -------------------------- | ------------------ |
+| `GET`    | `/api/explorer/list?path=` | List directory     |
+| `POST`   | `/api/explorer/mkdir`      | Create directory   |
+| `POST`   | `/api/explorer/create`     | Create file        |
+| `DELETE` | `/api/explorer/delete`     | Delete file/folder |
+| `POST`   | `/api/explorer/rename`     | Rename item        |
+| `POST`   | `/api/explorer/copy`       | Copy item          |
+| `POST`   | `/api/explorer/move`       | Move item          |
 
-```javascript
-// WebSocket URL (recommended)
-ws://localhost:8000/api/terminal/ws
+#### Settings API
 
-// Connection flow
-const ws = new WebSocket('ws://localhost:8000/api/terminal/ws');
-ws.onopen = () => ws.send(JSON.stringify({ type: 'connect', tabId: '1' }));
-ws.onmessage = (e) => handleOutput(JSON.parse(e.data));
-```
+| Method | Endpoint                           | Description          |
+| ------ | ---------------------------------- | -------------------- |
+| `GET`  | `/api/settings/wallpapers/current` | Get active wallpaper |
+| `POST` | `/api/settings/wallpapers`         | Set wallpaper        |
+| `GET`  | `/api/settings/config/:name`       | Get config file      |
+| `POST` | `/api/settings/config/:name`       | Save config file     |
 
-#### System Info API
+#### Terminal WebSocket
 
-| Method | Endpoint                  | Deskripsi         |
-| ------ | ------------------------- | ----------------- |
-| `GET`  | `/api/system/info`        | OS info, hostname |
-| `GET`  | `/api/system/processes`   | Running processes |
-| `GET`  | `/api/system/performance` | CPU/Memory stats  |
-| `GET`  | `/api/system/services`    | System services   |
+| Event              | Direction     | Payload                     |
+| ------------------ | ------------- | --------------------------- |
+| `terminal:create`  | Client→Server | `{ sessionId }`             |
+| `terminal:data`    | Bidirectional | `{ sessionId, data }`       |
+| `terminal:resize`  | Client→Server | `{ sessionId, cols, rows }` |
+| `terminal:destroy` | Client→Server | `{ sessionId }`             |
 
 ---
 
-## 6. Sistem Keamanan & Autentikasi
+## 6. Security & Authentication System
 
-### 6.1 Arsitektur LockScreen Session Token
+### 6.1 Session Token Architecture
 
 > [!IMPORTANT]
-> **Konsep Utama:** Setiap kali user **unlock screen**, sistem otomatis men-generate **Session Token** baru yang digunakan untuk semua komunikasi API dengan backend. Token ini akan **expired** ketika user menekan tombol **Lock** untuk masuk mode lockscreen.
+> The system uses **Session Tokens** that are generated on unlock and invalidated on lock.
 
-#### 6.1.1 Prinsip Kerja
+| State            | Token Status    | API Access             |
+| ---------------- | --------------- | ---------------------- |
+| **Unlocked**     | ✅ Token Valid   | ✅ All APIs accessible  |
+| **Locked**       | ❌ Token Expired | ❌ API rejects requests |
+| **Page Refresh** | 🗑️ Token cleared | ❌ Must unlock again    |
 
-| State                          | Token Status             | API Access                |
-| ------------------------------ | ------------------------ | ------------------------- |
-| **Unlocked** (Desktop aktif)   | ✅ Token Valid            | ✅ Semua API dapat diakses |
-| **Locked** (LockScreen tampil) | ❌ Token Expired          | ❌ API menolak request     |
-| **Transisi Lock→Unlock**       | 🔄 Token baru di-generate | ✅ Session baru dimulai    |
-| **Transisi Unlock→Lock**       | 🗑️ Token diinvalidasi     | ❌ Backend notified        |
+### 6.2 AuthService Implementation
 
-#### 6.1.2 Diagram Alur Otentikasi
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant LockScreen
-    participant AuthService
-    participant Backend
-    participant Apps
-
-    Note over LockScreen: INITIAL STATE: LOCKED
-    
-    User->>LockScreen: Input Password
-    User->>LockScreen: Press Enter
-    LockScreen->>LockScreen: validatePassword()
-    
-    alt Password Valid
-        LockScreen->>AuthService: requestSessionToken(password)
-        AuthService->>Backend: POST /api/auth/unlock
-        Note right of Backend: Generate new<br/>Session Token
-        Backend-->>AuthService: { token, expiresAt }
-        AuthService->>AuthService: storeToken(sessionToken)
-        AuthService-->>LockScreen: Token Ready
-        LockScreen->>User: Unlock Animation
-        
-        Note over Apps: DESKTOP ACTIVE - TOKEN VALID
-        
-        loop Semua API Calls
-            Apps->>AuthService: getToken()
-            AuthService-->>Apps: sessionToken
-            Apps->>Backend: Request + Authorization Header
-            Backend->>Backend: validateToken()
-            Backend-->>Apps: Response Data
-        end
-        
-        Note over User: User clicks LOCK button
-        User->>LockScreen: Lock Screen
-        LockScreen->>AuthService: invalidateSession()
-        AuthService->>Backend: POST /api/auth/lock
-        Note right of Backend: Mark token as<br/>EXPIRED
-        Backend-->>AuthService: { success: true }
-        AuthService->>AuthService: clearToken()
-        LockScreen->>User: Show LockScreen
-        
-        Note over LockScreen: STATE: LOCKED - TOKEN EXPIRED
-    else Password Invalid
-        LockScreen->>User: Shake Animation + Error
-    end
-```
-
-### 6.2 Komponen AuthService
-
-> **Lokasi File (Recommended):** `src/system/AuthService.js`
-
-#### 6.2.1 State Management
+**File:** `src/system/lib/AuthService.js` (111 lines)
 
 ```javascript
-// src/system/AuthService.js
 export class AuthService {
-    static sessionToken = null;      // Current session token
-    static tokenExpiry = null;       // Token expiry timestamp
-    static isLocked = true;          // LockScreen state
-    static userId = null;            // Current user ID
-    
-    // Token configuration
+    static sessionToken = null;
+    static tokenExpiry = null;
+    static isLocked = true;
+    static userId = null;
+    static permissions = [];
+
+    static API_BASE = 'http://localhost:8000/api';
     static TOKEN_HEADER = 'X-Session-Token';
     static LOCK_STATE_HEADER = 'X-LockScreen-State';
+
+    static async generateToken(password) { ... }
+    static async invalidateToken() { ... }
+    static getAuthHeaders() { ... }
+    static isTokenExpired() { ... }
+    static isSessionActive() { ... }
+    static getToken() { ... }
 }
 ```
 
-#### 6.2.2 API Methods
+### 6.3 ApiClient Implementation
+
+**File:** `src/system/lib/ApiClient.js` (80 lines)
 
 ```javascript
-// Generate token saat unlock
-static async generateToken(password) {
-    const response = await fetch('/api/auth/unlock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-    });
-    
-    if (response.ok) {
-        const { token, expiresAt, userId } = await response.json();
-        this.sessionToken = token;
-        this.tokenExpiry = new Date(expiresAt);
-        this.userId = userId;
-        this.isLocked = false;
-        return true;
-    }
-    return false;
-}
-
-// Invalidate token saat lock
-static async invalidateToken() {
-    if (this.sessionToken) {
-        await fetch('/api/auth/lock', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                [this.TOKEN_HEADER]: this.sessionToken
-            }
-        });
-    }
-    this.sessionToken = null;
-    this.tokenExpiry = null;
-    this.isLocked = true;
-}
-
-// Get current token untuk API calls
-static getAuthHeaders() {
-    if (!this.sessionToken || this.isTokenExpired()) {
-        throw new Error('SESSION_EXPIRED');
-    }
-    return {
-        [this.TOKEN_HEADER]: this.sessionToken,
-        [this.LOCK_STATE_HEADER]: this.isLocked ? 'locked' : 'unlocked'
-    };
-}
-
-// Check token validity
-static isTokenExpired() {
-    if (!this.tokenExpiry) return true;
-    return new Date() >= this.tokenExpiry;
-}
-
-// Check if session is active
-static isSessionActive() {
-    return !this.isLocked && this.sessionToken && !this.isTokenExpired();
-}
-```
-
-### 6.3 Integrasi dengan LockScreen
-
-#### 6.3.1 Modifikasi LockScreen.js
-
-```javascript
-import { AuthService } from '../../system/AuthService.js';
-
-export class LockScreen {
-    // ... existing code ...
-    
-    static async performUnlock() {
-        const password = document.getElementById('ls-pass').value;
-        
-        // Generate new session token via backend
-        const success = await AuthService.generateToken(password);
-        
-        if (success) {
-            const lockScreen = document.getElementById('lockscreen');
-            lockScreen.style.top = '-100%';
-            console.log('Session started with new token');
-        } else {
-            this.showError();
-        }
-    }
-    
-    // Called when user presses Lock button
-    static async performLock() {
-        // Notify backend & invalidate token
-        await AuthService.invalidateToken();
-        
-        // Show lockscreen
-        const lockScreen = document.getElementById('lockscreen');
-        lockScreen.style.top = '0';
-        document.getElementById('ls-pass').value = '';
-        
-        console.log('Session ended, token invalidated');
-    }
-}
-```
-
-### 6.4 Backend API Endpoints untuk Otentikasi
-
-#### 6.4.1 Endpoint Definitions
-
-| Method | Endpoint            | Deskripsi                | Auth Required     |
-| ------ | ------------------- | ------------------------ | ----------------- |
-| `POST` | `/api/auth/unlock`  | Generate session token   | ❌ (password only) |
-| `POST` | `/api/auth/lock`    | Invalidate session token | ✅ Session Token   |
-| `GET`  | `/api/auth/status`  | Check session status     | ✅ Session Token   |
-| `POST` | `/api/auth/refresh` | Refresh token (optional) | ✅ Session Token   |
-
-#### 6.4.2 Request/Response Specifications
-
-**POST /api/auth/unlock** - Generate Token
-```http
-POST /api/auth/unlock
-Content-Type: application/json
-
-Request:
-{
-    "password": "user_password",
-    "clientId": "webui-client-001"
-}
-
-Response (200 OK):
-{
-    "success": true,
-    "token": "sess_abc123xyz789...",
-    "expiresAt": "2026-01-10T22:00:00Z",
-    "userId": "user",
-    "permissions": ["fs_read", "fs_write", "terminal", "system_info"]
-}
-
-Response (401 Unauthorized):
-{
-    "success": false,
-    "error": "INVALID_PASSWORD",
-    "message": "Password tidak valid"
-}
-```
-
-**POST /api/auth/lock** - Invalidate Token
-```http
-POST /api/auth/lock
-Content-Type: application/json
-X-Session-Token: sess_abc123xyz789...
-
-Request:
-{
-    "reason": "user_initiated"  // or "timeout", "forced"
-}
-
-Response (200 OK):
-{
-    "success": true,
-    "message": "Session terminated",
-    "lockedAt": "2026-01-10T21:30:00Z"
-}
-```
-
-**GET /api/auth/status** - Check Session
-```http
-GET /api/auth/status
-X-Session-Token: sess_abc123xyz789...
-
-Response (200 OK):
-{
-    "isValid": true,
-    "isLocked": false,
-    "userId": "user",
-    "expiresAt": "2026-01-10T22:00:00Z",
-    "remainingSeconds": 1800
-}
-
-Response (401 - Token Expired):
-{
-    "isValid": false,
-    "error": "TOKEN_EXPIRED",
-    "message": "Session telah expired, silakan unlock untuk melanjutkan"
-}
-```
-
-### 6.5 Penggunaan Token di Semua API Calls
-
-#### 6.5.1 Fetch Wrapper dengan Auto-Auth
-
-```javascript
-// src/system/ApiClient.js
-import { AuthService } from './AuthService.js';
-
 export class ApiClient {
     static BASE_URL = 'http://localhost:8000/api';
-    
+
     static async request(endpoint, options = {}) {
-        // Check session before any request
         if (!AuthService.isSessionActive()) {
             throw new Error('SESSION_LOCKED');
         }
@@ -918,238 +742,59 @@ export class ApiClient {
             ...options.headers
         };
         
-        const response = await fetch(`${this.BASE_URL}${endpoint}`, {
-            ...options,
-            headers
-        });
-        
-        // Handle token expiration
-        if (response.status === 401) {
-            const data = await response.json();
-            if (data.error === 'TOKEN_EXPIRED') {
-                // Trigger lock screen
-                await LockScreen.performLock();
-                throw new Error('SESSION_EXPIRED');
-            }
-        }
-        
-        return response;
+        // ... fetch with auto 401 handling
     }
-    
-    static async get(endpoint) {
-        return this.request(endpoint, { method: 'GET' });
-    }
-    
-    static async post(endpoint, data) {
-        return this.request(endpoint, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-    }
+
+    static async get(endpoint) { ... }
+    static async post(endpoint, data) { ... }
+    static async delete(endpoint) { ... }
+    static triggerLockScreen() { ... }
 }
 ```
 
-#### 6.5.2 Contoh Penggunaan di Komponen
-
-```javascript
-// Explorer.js - File listing with auth
-import { ApiClient } from '../../system/ApiClient.js';
-
-static async loadDirectory(path) {
-    try {
-        const response = await ApiClient.get(`/fs/list?path=${path}`);
-        const data = await response.json();
-        this.renderFiles(data.items);
-    } catch (error) {
-        if (error.message === 'SESSION_LOCKED') {
-            console.warn('Session locked, cannot access filesystem');
-            // UI will show lockscreen automatically
-        }
-    }
-}
-```
-
-```javascript
-// Terminal.js - Command execution with auth
-import { ApiClient } from '../../system/ApiClient.js';
-
-static async executeCommand(cmd, tabId) {
-    try {
-        const response = await ApiClient.post('/terminal/execute', {
-            command: cmd,
-            tabId: tabId
-        });
-        const result = await response.json();
-        this.displayOutput(result.output, tabId);
-    } catch (error) {
-        if (error.message === 'SESSION_EXPIRED') {
-            this.displayOutput('Session expired. Please unlock to continue.', tabId);
-        }
-    }
-}
-```
-
-### 6.6 Backend Detection of LockScreen Mode
-
-#### 6.6.1 Server-Side Token State
-
-```python
-# Backend (FastAPI example)
-from datetime import datetime
-from typing import Optional
-from fastapi import HTTPException, Header
-
-# In-memory token store (use Redis in production)
-active_sessions = {}
-
-class SessionState:
-    def __init__(self, token: str, user_id: str, expires_at: datetime):
-        self.token = token
-        self.user_id = user_id
-        self.expires_at = expires_at
-        self.is_locked = False
-        self.locked_at: Optional[datetime] = None
-
-async def validate_token(
-    x_session_token: str = Header(...),
-    x_lockscreen_state: str = Header(default="unlocked")
-):
-    if x_session_token not in active_sessions:
-        raise HTTPException(401, {"error": "TOKEN_INVALID"})
-    
-    session = active_sessions[x_session_token]
-    
-    # Check if expired
-    if datetime.utcnow() >= session.expires_at:
-        raise HTTPException(401, {"error": "TOKEN_EXPIRED"})
-    
-    # Check if locked
-    if session.is_locked:
-        raise HTTPException(401, {"error": "SESSION_LOCKED"})
-    
-    return session
-```
-
-#### 6.6.2 Lock Event Notification
-
-```python
-@app.post("/api/auth/lock")
-async def lock_session(
-    x_session_token: str = Header(...)
-):
-    if x_session_token in active_sessions:
-        session = active_sessions[x_session_token]
-        session.is_locked = True
-        session.locked_at = datetime.utcnow()
-        
-        # Log for security audit
-        logger.info(f"Session locked: {session.user_id} at {session.locked_at}")
-        
-        return {"success": True, "lockedAt": session.locked_at.isoformat()}
-    
-    raise HTTPException(404, {"error": "SESSION_NOT_FOUND"})
-```
-
-### 6.7 Sequence Diagram: Complete Auth Flow
+### 6.4 Security Flow Diagram
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant LS as LockScreen
-    participant AS as AuthService
-    participant AC as ApiClient
-    participant BE as Backend
-    participant DB as Token Store
+    participant User
+    participant LockScreen
+    participant AuthService
+    participant Backend
 
-    Note over LS: === UNLOCK FLOW ===
-    U->>LS: Enter Password + Submit
-    LS->>AS: generateToken(password)
-    AS->>BE: POST /api/auth/unlock
-    BE->>BE: Validate password
-    BE->>DB: Store new session token
-    BE-->>AS: { token, expiresAt }
-    AS->>AS: Store token locally
-    AS-->>LS: Success
-    LS->>U: Show Desktop
+    Note over LockScreen: STATE: LOCKED
     
-    Note over AC: === API CALLS (SESSION ACTIVE) ===
-    U->>AC: User action (e.g., open folder)
-    AC->>AS: getAuthHeaders()
-    AS-->>AC: { X-Session-Token: ... }
-    AC->>BE: GET /api/fs/list + headers
-    BE->>DB: Validate token
-    DB-->>BE: Token valid, not locked
-    BE-->>AC: File list data
-    AC->>U: Display files
+    User->>LockScreen: Enter Password + Submit
+    LockScreen->>AuthService: generateToken(password)
+    AuthService->>Backend: POST /api/auth/unlock
+    Backend-->>AuthService: { token, expiresAt }
+    AuthService->>AuthService: Store token in memory
+    AuthService-->>LockScreen: success = true
+    LockScreen->>User: Dispatch 'system:unlock' event
     
-    Note over LS: === LOCK FLOW ===
-    U->>LS: Click Lock Button
-    LS->>AS: invalidateToken()
-    AS->>BE: POST /api/auth/lock
-    BE->>DB: Mark session as LOCKED
-    BE-->>AS: { success: true }
-    AS->>AS: Clear local token
-    AS-->>LS: Done
-    LS->>U: Show LockScreen
+    Note over User: Desktop & Taskbar mounted
     
-    Note over AC: === API CALLS (SESSION LOCKED) ===
-    U->>AC: Attempt action
-    AC->>AS: getAuthHeaders()
-    AS-->>AC: Error: SESSION_EXPIRED
-    AC->>LS: Trigger lock screen
-    LS->>U: Please unlock to continue
+    User->>LockScreen: Click Lock Button
+    LockScreen->>AuthService: invalidateToken()
+    AuthService->>Backend: POST /api/auth/lock
+    AuthService->>AuthService: Clear token
+    LockScreen->>User: Show LockScreen
 ```
 
-### 6.8 Security Considerations
-
-#### 6.8.1 Token Specifications
-
-| Property         | Value                    | Keterangan                      |
-| ---------------- | ------------------------ | ------------------------------- |
-| Format           | `sess_[random_32_chars]` | Prefix untuk identifikasi       |
-| Length           | 64 characters            | Cukup entropy untuk keamanan    |
-| Algorithm        | UUID v4 + HMAC-SHA256    | Tidak dapat diprediksi          |
-| Storage (Client) | Memory only              | Tidak di localStorage           |
-| Storage (Server) | Redis dengan TTL         | Auto-expire                     |
-| Lifetime         | 30 menit (configurable)  | Dari unlock hingga lock/timeout |
-
-#### 6.8.2 Security Best Practices
+### 6.5 Security Best Practices
 
 > [!CAUTION]
-> **JANGAN** simpan token di localStorage atau cookies untuk mencegah session hijacking saat lockscreen aktif.
+> Token is stored in **memory only**, NOT in localStorage/cookies.
 
-1. **Token tidak persist** - Hanya disimpan di memory, hilang saat refresh
-2. **Immediate invalidation** - Token langsung invalid saat lock
-3. **Server-side validation** - Semua validasi di backend
-4. **Audit logging** - Log semua lock/unlock events
-5. **Rate limiting** - Batasi percobaan unlock (3x/menit)
-
-#### 6.8.3 Klasifikasi Endpoint
-
-| Endpoint Type  | Auth Required | Token State  | Contoh                            |
-| -------------- | ------------- | ------------ | --------------------------------- |
-| **Public**     | ❌             | Any          | `/api/health`, `/api/auth/unlock` |
-| **Protected**  | ✅             | Unlocked     | `/api/fs/*`, `/api/terminal/*`    |
-| **Lock Event** | ✅             | Any → Locked | `/api/auth/lock`                  |
-
-### 6.9 Status Implementasi
-
-| Komponen               | Status         | Priority |
-| ---------------------- | -------------- | -------- |
-| AuthService.js         | ⏳ To Implement | High     |
-| ApiClient.js           | ⏳ To Implement | High     |
-| LockScreen integration | ⏳ To Implement | High     |
-| Backend /api/auth/*    | ⏳ To Implement | High     |
-| Token Store (Redis)    | ⏳ To Implement | Medium   |
-| Audit Logging          | ⏳ To Implement | Medium   |
+1. ✅ Token does not persist - Lost on refresh
+2. ✅ Immediate invalidation on lock
+3. ✅ Server-side validation on every request
+4. ✅ Token cleared on `beforeunload` event
 
 ---
 
-## 7. Hierarki Pemuatan Data (Loading Priority)
+## 7. Data Loading Hierarchy (Loading Priority)
 
 ### 7.1 Initialization Sequence
-
-Urutan inisialisasi didefinisikan di `src/main.js`:
 
 ```mermaid
 flowchart TD
@@ -1157,83 +802,56 @@ flowchart TD
         A[DOMContentLoaded Event]
     end
     
-    subgraph "Phase 2: Core Initialization"
+    subgraph "Phase 2: Core Init"
         B[WindowManager.init]
+        C[AppLoader.init - Auto-discover apps]
     end
     
-    subgraph "Phase 3: Base Layer"
-        C[Desktop.mount]
+    subgraph "Phase 3: LockScreen Only"
+        D[LockScreen.mount]
     end
     
-    subgraph "Phase 4: Applications"
-        D[Explorer.mount]
-        E[Terminal.mount]
-        F[Settings.mount]
-        G[TaskManager.mount]
-        H[MediaCenter.mount]
-        I[TextEditor.mount]
+    subgraph "Phase 4: After Unlock"
+        E[system:unlock event]
+        F[Desktop.mount]
+        G[Taskbar.mount]
+        H[Wallpaper activation]
     end
     
-    subgraph "Phase 5: UI Layer"
-        J[Taskbar.mount]
-    end
-    
-    subgraph "Phase 6: Overlay"
-        K[LockScreen.mount]
-    end
-    
-    A --> B --> C --> D & E & F & G & H & I --> J --> K
+    A --> B --> C --> D
+    D -.->|User unlocks| E
+    E --> F --> G --> H
 ```
 
 ### 7.2 Priority Table
 
-| Priority | Komponen      | Alasan                             | Z-Index |
-| -------- | ------------- | ---------------------------------- | ------- |
-| 1        | WindowManager | Core dependency untuk semua window | -       |
-| 2        | Desktop       | Base layer, container untuk icons  | 1       |
-| 3        | Applications  | Fitur utama, hidden by default     | 100+    |
-| 4        | Taskbar       | UI controls, selalu visible        | 9000+   |
-| 5        | LockScreen    | Security overlay, top layer        | 9999    |
+| Priority | Component     | Reason                    | Z-Index |
+| -------- | ------------- | ------------------------- | ------- |
+| 1        | WindowManager | Core dependency           | -       |
+| 2        | AppLoader     | Discover all apps         | -       |
+| 3        | LockScreen    | Security first            | 9999+   |
+| 4        | Desktop       | Base layer (after unlock) | 1       |
+| 5        | Taskbar       | UI controls               | 9000+   |
+| 6        | Applications  | On-demand                 | 100+    |
 
-### 7.3 Component Dependency Graph
+### 7.3 App Loading Flow
 
 ```mermaid
-graph TB
-    WM[WindowManager] 
+flowchart LR
+    AL[AppLoader.init] --> SCAN[Scan src/apps/*/manifest.js]
+    SCAN --> REG[Register to AppRegistry]
+    REG --> DT[Desktop uses AppRegistry]
+    REG --> TB[Taskbar uses AppRegistry]
     
-    WM --> Desktop
-    WM --> Explorer
-    WM --> Terminal
-    WM --> Settings
-    WM --> TaskManager
-    WM --> MediaCenter
-    WM --> TextEditor
-    WM --> Taskbar
-    
-    FS[FileSystem] --> Explorer
-    FS --> Terminal
-    
-    Desktop -.->|opens| Explorer
-    Desktop -.->|opens| Terminal
-    
-    Taskbar -.->|toggles| Explorer
-    Taskbar -.->|toggles| Terminal
-    Taskbar -.->|toggles| Settings
-    Taskbar -.->|toggles| TaskManager
-    Taskbar -.->|toggles| MediaCenter
-    Taskbar -.->|toggles| TextEditor
+    DT --> LAUNCH[AppRegistry.launch]
+    TB --> LAUNCH
+    LAUNCH --> INST[createInstance method]
+    INST --> WIN[New Window Created]
 ```
-
-### 7.4 Lazy Loading Opportunities
-
-Komponen yang bisa di-lazy load:
-- MediaCenter (heavy mock data)
-- TaskManager (performance monitoring)
-- TextEditor (conditional load on file open)
 
 ---
 
-## 8. Konfigurasi Aplikasi
+## 8. Application Configuration
 
 ### 8.1 Vite Configuration
 
@@ -1241,174 +859,142 @@ Komponen yang bisa di-lazy load:
 
 ```javascript
 import { defineConfig } from 'vite';
-import path from 'path';
+import { appApiPlugin } from './vite-plugin-app-api.js';
 
 export default defineConfig({
+    plugins: [
+        appApiPlugin(),           // Auto-load app API endpoints
+        { name: 'block-backend-files', ... },  // Prevent access to api/ folders
+        { name: 'serve-storage', ... }         // Serve /storage/ files
+    ],
     resolve: {
-        alias: {
-            '@': path.resolve(__dirname, './src'),
-        },
+        alias: { '@': './src' }
     },
     server: {
         port: 3000,
+        fs: {
+            allow: ['./', './storage'],
+            deny: ['**/src/apps/**/api/**', '**/src/apps/**/services/**']
+        }
     }
 });
 ```
 
-| Setting           | Value   | Deskripsi                |
-| ----------------- | ------- | ------------------------ |
-| `resolve.alias.@` | `./src` | Path alias untuk imports |
-| `server.port`     | 3000    | Development server port  |
+### 8.2 Backend Configuration
 
-### 8.2 Package Configuration
-
-**File:** `package.json`
+**File:** `server/package.json`
 
 ```json
 {
-    "name": "linux-webui",
-    "private": true,
-    "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
+        "start": "node server.js"
     },
-    "devDependencies": {
-        "vite": "^5.0.0"
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "multer": "^1.4.5-lts.1",
+        "node-pty": "^1.0.0",
+        "socket.io": "^4.6.1",
+        "uuid": "^9.0.1"
     }
 }
 ```
 
-**NPM Scripts:**
+**Server Configuration (server.js):**
 
-| Script    | Command           | Deskripsi                |
-| --------- | ----------------- | ------------------------ |
-| `dev`     | `npm run dev`     | Start development server |
-| `build`   | `npm run build`   | Build for production     |
-| `preview` | `npm run preview` | Preview production build |
+| Setting                | Value                 |
+| ---------------------- | --------------------- |
+| Port                   | 8000                  |
+| CORS                   | Enabled (all origins) |
+| JSON Limit             | 10mb                  |
+| Socket.io pingTimeout  | 60000ms               |
+| Socket.io pingInterval | 25000ms               |
 
-### 8.3 CSS Custom Properties (Design Tokens)
+### 8.3 CSS Design Tokens
 
 **File:** `src/styles/global.css`
 
 ```css
 :root {
-    --bg-wallpaper: #f3f3f3 url('...') no-repeat center center fixed;
+    --bg-wallpaper: #1a1a2e url('...') no-repeat center center fixed;
     --acrylic-bg: rgba(255, 255, 255, 0.75);
     --window-border: 1px solid rgba(255, 255, 255, 0.4);
     --dock-bg: rgba(20, 20, 20, 0.85);
-    --dock-border: 1px solid rgba(255, 255, 255, 0.1);
     --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.25);
     --accent-color: #0078d4;
     --text-primary: #202020;
 }
 ```
 
-### 8.4 Konfigurasi yang Perlu Ditambahkan (Future)
-
-```javascript
-// config/app.config.js (recommended)
-export const AppConfig = {
-    api: {
-        baseUrl: 'http://localhost:8000/api',
-        wsUrl: 'ws://localhost:8000/ws',
-        timeout: 30000,
-    },
-    auth: {
-        tokenKey: 'linuxui_token',
-        refreshThreshold: 300000, // 5 minutes
-    },
-    features: {
-        enableRealFilesystem: false,
-        enableTerminalBackend: false,
-        enableCloudSync: false,
-    }
-};
-```
-
 ---
 
-## 9. Rekomendasi Pengembangan
+## 9. Development Recommendations
 
-### 9.1 Backend Integration Roadmap
+### 9.1 Feature Status
 
-```mermaid
-gantt
-    title Backend Integration Phases
-    dateFormat  YYYY-MM
-    section Phase 1
-    FastAPI/Express Setup    :2026-01, 2w
-    File System API          :2026-02, 3w
-    section Phase 2
-    Terminal WebSocket       :2026-02, 2w
-    Auth System (JWT)        :2026-03, 2w
-    section Phase 3
-    System Monitoring API    :2026-03, 2w
-    Persistent Storage       :2026-04, 2w
-```
+| Feature                | Status        | Notes                    |
+| ---------------------- | ------------- | ------------------------ |
+| Backend Integration    | ✅ Implemented | Express + Socket.io      |
+| File System API        | ✅ Implemented | Full CRUD                |
+| Terminal Backend       | ✅ Implemented | node-pty + xterm.js      |
+| Auth System            | ✅ Implemented | Token-based              |
+| LocalStorage           | ✅ Partial     | Wallpaper, some settings |
+| API Service Layer      | ✅ Implemented | ApiClient, SystemAPI     |
+| App Manifest System    | ✅ Implemented | Auto-discovery           |
+| Multi-Instance Windows | ✅ Implemented | All apps                 |
 
-### 9.2 Priority Fixes
+### 9.2 Future Improvements
 
-1. **Add LocalStorage persistence** untuk settings user
-2. **Implement error boundaries** untuk crash handling
-3. **Add loading states** untuk async operations
-4. **Create API service layer** untuk centralized fetching
+1. **Redis Token Store** - For multi-server deployment
+2. **Rate Limiting** - On auth endpoints
+3. **Audit Logging** - Track lock/unlock events
+4. **IndexedDB** - For offline file caching
+5. **Service Worker** - PWA support
 
-### 9.3 Suggested API Architecture
-
-```
-backend/
-├── app/
-│   ├── main.py              # FastAPI app
-│   ├── routers/
-│   │   ├── filesystem.py    # /api/fs/*
-│   │   ├── terminal.py      # /api/terminal/*
-│   │   ├── system.py        # /api/system/*
-│   │   └── auth.py          # /api/auth/*
-│   ├── services/
-│   │   ├── fs_service.py
-│   │   └── process_service.py
-│   └── websockets/
-│       └── terminal_ws.py
-└── requirements.txt
-```
-
----
-
-## Lampiran
-
-### A. File Size Reference
-
-| File             | Lines | Size    |
-| ---------------- | ----- | ------- |
-| Explorer.js      | 799   | 49.7 KB |
-| Taskbar.js       | 595   | 31.6 KB |
-| Settings.js      | 495   | 36.2 KB |
-| Desktop.js       | 354   | 17.3 KB |
-| TaskManager.js   | 351   | 22.5 KB |
-| TextEditor.js    | 319   | 14.3 KB |
-| MediaCenter.js   | 310   | 20.4 KB |
-| Terminal.js      | 266   | 11.0 KB |
-| WindowManager.js | 127   | 4.1 KB  |
-| FileSystem.js    | 81    | 2.2 KB  |
-| LockScreen.js    | 71    | 2.8 KB  |
-| global.css       | 861   | 15.8 KB |
-
-### B. Quick Reference Commands
+### 9.3 Development Commands
 
 ```bash
-# Development
+# Frontend (Vite)
 npm install          # Install dependencies
 npm run dev          # Start dev server (port 3000)
 
-# Production
-npm run build        # Build to /dist
-npm run preview      # Preview production build
+# Backend (Node.js)
+cd server
+npm install          # Install backend dependencies
+npm start            # Start server (port 8000)
+
+# Or use startup script
+./start_dev.sh       # Start both frontend & backend
 ```
 
 ---
 
-> **Dokumen ini di-generate pada:** 10 Januari 2026  
-> **Dianalisis oleh:** AI Technical Analyst
+## Appendix
+
+### A. File Size Reference
+
+| File           | Lines | Size    |
+| -------------- | ----- | ------- |
+| Explorer.js    | 1380  | 65.4 KB |
+| Taskbar.js     | 759   | 33.1 KB |
+| Terminal.js    | 376   | 11.4 KB |
+| Desktop.js     | 343   | 13.3 KB |
+| AppRegistry.js | 134   | 3.8 KB  |
+| LockScreen.js  | 131   | 4.4 KB  |
+| AuthService.js | 111   | 3.1 KB  |
+| ApiClient.js   | 80    | 2.1 KB  |
+| server.js      | 183   | 5.8 KB  |
+
+### B. Port Reference
+
+| Service         | Port | Protocol |
+| --------------- | ---- | -------- |
+| Vite Dev Server | 3000 | HTTP     |
+| Backend API     | 8000 | HTTP     |
+| WebSocket       | 8000 | WS       |
+
+---
+
+> **Document updated on:** January 18, 2026  
+> **Revision:** Full-stack architecture, AuthService implemented, Terminal real PTY
