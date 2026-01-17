@@ -1,0 +1,61 @@
+{
+  "appearance": {
+    "theme": "light",
+    "accentColor": "#0078d4",
+    "fontSize": 14,
+    "animations": true,
+    "transparency": true
+  },
+  "wallpaper": {
+    "desktop": "/storage/wallpaper/illust_earth.png",
+    "lockscreen": "/storage/wallpaper/leaf.png"
+  },
+  "display": {
+    "brightness": 80,
+    "nightLight": false,
+    "nightLightIntensity": 50,
+    "resolution": "1920x1080",
+    "scaling": 100
+  },
+  "sound": {
+    "masterVolume": 65,
+    "systemSounds": true,
+    "notificationSounds": true,
+    "outputDevice": "default"
+  },
+  "notifications": {
+    "enabled": true,
+    "showPreviews": true,
+    "doNotDisturb": false,
+    "quietHours": {
+      "enabled": false,
+      "start": "22:00",
+      "end": "07:00"
+    }
+  },
+  "privacy": {
+    "locationAccess": false,
+    "cameraAccess": false,
+    "microphoneAccess": false,
+    "analytics": true
+  },
+  "language": {
+    "locale": "en-US",
+    "timezone": "Asia/Jakarta",
+    "dateFormat": "DD/MM/YYYY",
+    "timeFormat": "24h"
+  },
+  "power": {
+    "screenTimeout": 10,
+    "sleepTimeout": 30,
+    "powerMode": "balanced"
+  },
+  "window-state": {
+    "width": 950,
+    "height": 600,
+    "x": 100,
+    "y": 80,
+    "isMaximized": false
+  },
+  "lastSection": "system"
+}

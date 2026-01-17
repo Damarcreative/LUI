@@ -1,0 +1,17 @@
+{
+  "preferences": {
+    "defaultShell": "bash",
+    "fontSize": 14,
+    "fontFamily": "'Consolas', 'Courier New', monospace",
+    "theme": "dark",
+    "cursorStyle": "block",
+    "historyLimit": 1000
+  },
+  "window-state": {
+    "width": 800,
+    "height": 500,
+    "x": 150,
+    "y": 150,
+    "isMaximized": false
+  }
+}

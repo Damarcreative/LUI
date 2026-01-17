@@ -1,0 +1,72 @@
+{
+  "hostname": "damarjati",
+  "platform": "linux",
+  "arch": "x64",
+  "osType": "Linux",
+  "osRelease": "6.6.87.2-microsoft-standard-WSL2",
+  "uptime": 14612.57,
+  "cpu": {
+    "model": "Intel(R) Core(TM) i5-4300M CPU @ 2.60GHz",
+    "cores": 2,
+    "speed": "0 MHz",
+    "logicalProcessors": 2
+  },
+  "memory": {
+    "total": "3.8 GB",
+    "used": "694 MB",
+    "available": "3.1 GB",
+    "percentUsed": 18
+  },
+  "storage": [
+    {
+      "device": "overlay",
+      "size": "1007G",
+      "used": "18G",
+      "available": "939G",
+      "percentUsed": "2%",
+      "mount": "/"
+    }
+  ],
+  "gpu": {
+    "model": "Unknown",
+    "available": false
+  },
+  "network": {
+    "wifi": true,
+    "ethernet": true,
+    "interfaces": [
+      {
+        "name": "eth0",
+        "address": "172.19.0.2",
+        "mac": "6a:e7:5e:84:85:f0"
+      }
+    ]
+  },
+  "bluetooth": {
+    "available": false
+  },
+  "packages": {
+    "nodejs": "v25.2.1",
+    "npm": "11.7.0",
+    "python": "3.13.11",
+    "pip": "25.3",
+    "kernel": "6.6.87.2-microsoft-standard-WSL2",
+    "pacman": "Not installed",
+    "apt": "installed",
+    "dnf": "",
+    "yum": "",
+    "git": "2.52.0",
+    "docker": "Not installed",
+    "gcc": "15.2.1",
+    "go": "Not installed",
+    "rust": "Not installed",
+    "java": "Not installed"
+  },
+  "features": {
+    "wifi": false,
+    "bluetooth": false,
+    "ethernet": true,
+    "docker": true
+  },
+  "collectedAt": "2026-01-17T16:59:47.633Z"
+}

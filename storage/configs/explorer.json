@@ -1,0 +1,24 @@
+{
+  "preferences": {
+    "viewMode": "grid", 
+    "sortBy": "name", 
+    "sortDirection": "asc", 
+    "showHiddenFiles": false,
+    "showFileExtensions": true,
+    "sidebarWidth": 200
+  },
+  "window-state": {
+    "lastPath": "C:/Users/User/Documents",
+    "width": 900,
+    "height": 600,
+    "x": 100,
+    "y": 100,
+    "isMaximized": false
+  },
+  "favorites": [
+    { "name": "Desktop", "path": "~/Desktop", "icon": "ph-desktop" },
+    { "name": "Documents", "path": "~/Documents", "icon": "ph-files" },
+    { "name": "Downloads", "path": "~/Downloads", "icon": "ph-download" },
+    { "name": "Pictures", "path": "~/Pictures", "icon": "ph-image" }
+  ]
+}

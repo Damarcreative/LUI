@@ -1,0 +1,17 @@
+{
+  "preferences": {
+    "fontSize": 14,
+    "wordWrap": true,
+    "showLineNumbers": true,
+    "theme": "light",
+    "autoSave": false
+  },
+  "window-state": {
+    "width": 700,
+    "height": 500,
+    "x": 200,
+    "y": 200,
+    "isMaximized": false
+  },
+  "recentFiles": []
+}
