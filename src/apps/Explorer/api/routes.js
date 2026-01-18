@@ -54,6 +54,33 @@ async function getItemInfo(itemPath, name) {
         await fs.mkdir(FS_ROOT, { recursive: true });
         console.log(`[FS] Created root directory: ${FS_ROOT}`);
     }
+
+    const userDirs = [
+        'home',
+        'home/user',
+        'home/user/Documents',
+        'home/user/Downloads',
+        'home/user/Music',
+        'home/user/Pictures',
+        'home/user/Videos',
+        'home/user/Desktop',
+        'etc',
+        'var',
+        'var/log',
+        'tmp',
+        'mnt',
+        'dev'
+    ];
+
+    for (const dir of userDirs) {
+        const fullPath = path.join(FS_ROOT, dir);
+        try {
+            await fs.access(fullPath);
+        } catch {
+            await fs.mkdir(fullPath, { recursive: true });
+            console.log(`[FS] Created directory: /${dir}`);
+        }
+    }
 })();
 
 export function setupRoutes(router, { authMiddleware, FTPClient }) {

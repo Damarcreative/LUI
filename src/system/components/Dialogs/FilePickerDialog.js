@@ -1,5 +1,5 @@
-import { FileSystemService } from './FileSystemService.js';
-import { AuthService } from './AuthService.js';
+import { FileSystemService } from '../../lib/FileSystemService.js';
+import { AuthService } from '../../lib/AuthService.js';
 
 export class FilePickerDialog {
     static dialogContainer = null;
@@ -184,9 +184,9 @@ export class FilePickerDialog {
             }
 
             .fp-sidebar {
-                width: 180px;
-                background: #f5f5f5;
-                border-right: 1px solid #eee;
+                width: 200px;
+                background: rgba(243, 243, 243, 0.6);
+                border-right: 1px solid rgba(0, 0, 0, 0.05);
                 padding: 10px;
                 overflow-y: auto;
             }
@@ -220,11 +220,21 @@ export class FilePickerDialog {
                 color: #0078d4;
             }
 
-            .fp-sidebar-item svg {
-                width: 18px;
-                height: 18px;
-                fill: currentColor;
+            .fp-sidebar-item i.ph {
+                font-size: 16px;
             }
+
+            .fp-sidebar-item .icon-root { color: #e95420; }
+            .fp-sidebar-item .icon-home { color: #0078d4; }
+            .fp-sidebar-item .icon-documents { color: #e8b339; }
+            .fp-sidebar-item .icon-downloads { color: #0078d4; }
+            .fp-sidebar-item .icon-music { color: #1db954; }
+            .fp-sidebar-item .icon-pictures { color: #d93025; }
+            .fp-sidebar-item .icon-videos { color: #a142f4; }
+            .fp-sidebar-item .icon-config { color: #666; }
+            .fp-sidebar-item .icon-folder { color: #666; }
+            .fp-sidebar-item .icon-tmp { color: #ff9800; }
+            .fp-sidebar-item .icon-device { color: #555; }
 
             .fp-main {
                 flex: 1;
@@ -235,27 +245,30 @@ export class FilePickerDialog {
 
             .fp-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-                gap: 8px;
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 10px;
+                padding-top: 10px;
             }
 
             .fp-item {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                padding: 12px 8px;
-                border-radius: 8px;
+                text-align: center;
+                padding: 10px;
+                border-radius: 4px;
                 cursor: pointer;
-                transition: background 0.15s;
+                transition: background 0.1s;
                 position: relative;
             }
 
             .fp-item:hover {
-                background: rgba(0, 0, 0, 0.04);
+                background: rgba(243, 243, 243, 0.6);
             }
 
             .fp-item.selected {
                 background: rgba(0, 120, 212, 0.15);
+                outline: 1px solid rgba(0, 120, 212, 0.3);
             }
 
             .fp-item.disabled {
@@ -264,17 +277,14 @@ export class FilePickerDialog {
             }
 
             .fp-item-icon {
-                width: 48px;
-                height: 48px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-bottom: 6px;
+                margin-bottom: 5px;
             }
 
-            .fp-item-icon svg {
-                width: 40px;
-                height: 40px;
+            .fp-item-icon i.ph {
+                font-size: 40px;
             }
 
             .fp-item-name {
@@ -409,7 +419,7 @@ export class FilePickerDialog {
 
     static getIcon(isFolder, filename = '') {
         if (isFolder) {
-            return '<i class="ph ph-folder" style="color:#e8b339;"></i>';
+            return '<i class="ph ph-folder" style="color:#fdd835;"></i>';
         }
         const ext = filename.split('.').pop().toLowerCase();
         const colors = {
@@ -484,31 +494,52 @@ export class FilePickerDialog {
                     </div>
                     <div class="fp-body">
                         <div class="fp-sidebar">
-                            <div class="fp-sidebar-title">Quick Access</div>
-                            <div class="fp-sidebar-item" data-path="/home/user">
-                                <i class="ph ph-house"></i>
+                            <div class="fp-sidebar-title">Favorites</div>
+                            <div class="fp-sidebar-item" data-path="/">
+                                <i class="ph ph-folder icon-root"></i>
+                                Root (/)
+                            </div>
+                            <div class="fp-sidebar-item" data-path="/home">
+                                <i class="ph ph-house icon-home"></i>
                                 Home
                             </div>
                             <div class="fp-sidebar-item" data-path="/home/user/Documents">
-                                <i class="ph ph-file-text"></i>
+                                <i class="ph ph-file-text icon-documents"></i>
                                 Documents
                             </div>
                             <div class="fp-sidebar-item" data-path="/home/user/Downloads">
-                                <i class="ph ph-download-simple"></i>
+                                <i class="ph ph-download-simple icon-downloads"></i>
                                 Downloads
                             </div>
+                            <div class="fp-sidebar-item" data-path="/home/user/Music">
+                                <i class="ph ph-music-notes icon-music"></i>
+                                Music
+                            </div>
                             <div class="fp-sidebar-item" data-path="/home/user/Pictures">
-                                <i class="ph ph-image"></i>
+                                <i class="ph ph-image icon-pictures"></i>
                                 Pictures
                             </div>
+                            <div class="fp-sidebar-item" data-path="/home/user/Videos">
+                                <i class="ph ph-video icon-videos"></i>
+                                Videos
+                            </div>
                             <div class="fp-sidebar-title" style="margin-top:15px;">System</div>
-                            <div class="fp-sidebar-item" data-path="/">
-                                <i class="ph ph-hard-drives"></i>
-                                Root /
+                            <div class="fp-sidebar-item" data-path="/etc">
+                                <i class="ph ph-gear icon-config"></i>
+                                etc (Config)
+                            </div>
+                            <div class="fp-sidebar-item" data-path="/var">
+                                <i class="ph ph-folder icon-folder"></i>
+                                var
                             </div>
                             <div class="fp-sidebar-item" data-path="/tmp">
-                                <i class="ph ph-folder"></i>
-                                Temp
+                                <i class="ph ph-folder icon-tmp"></i>
+                                tmp
+                            </div>
+                            <div class="fp-sidebar-title" style="margin-top:15px;">Devices</div>
+                            <div class="fp-sidebar-item" data-path="/mnt">
+                                <i class="ph ph-hard-drive icon-device"></i>
+                                Mounts
                             </div>
                         </div>
                         <div class="fp-main ${isMulti ? 'fp-multi' : ''}" id="fp-main">
