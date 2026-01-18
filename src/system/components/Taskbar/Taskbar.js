@@ -1,5 +1,6 @@
 import './style.css';
 import { WindowManager } from '../WindowManager/WindowManager.js';
+import { AppRegistry } from '../../lib/AppRegistry.js';
 
 export class Taskbar {
     static currentCalendarDate = new Date();
@@ -13,30 +14,11 @@ export class Taskbar {
                     </div>
 
                     <div class="taskbar-center">
-                        <div class="taskbar-icon" id="icon-explorer" data-app="explorer" title="File Explorer">
-                            <i class="ph ph-folder"></i>
-                        </div>
-                        <div class="taskbar-icon" id="icon-cli" data-app="cli" title="Terminal">
-                            <i class="ph ph-terminal-window"></i>
-                        </div>
-                        <div class="taskbar-icon" id="icon-settings" data-app="settings" title="Settings">
-                            <i class="ph ph-gear"></i>
-                        </div>
-                        <div class="taskbar-icon" id="icon-taskmanager" data-app="taskmanager" title="Task Manager">
-                           <i class="ph ph-chart-line"></i>
-                        </div>
-                        <div class="taskbar-icon" id="icon-media-app" data-app="media-app" title="Media Center">
-                           <i class="ph ph-play-circle"></i>
-                        </div>
-                        <div class="taskbar-icon" id="icon-texteditor" data-app="texteditor" title="Text Editor">
-                            <i class="ph ph-file-text"></i>
-                        </div>
+                        <div class="taskbar-pinned" id="taskbar-pinned"></div>
+                        <div class="taskbar-dynamic" id="taskbar-dynamic"></div>
                     </div>
 
                     <div class="tray-area">
-                        <div class="tray-icon" id="tray-network" title="Network">
-                            <i class="ph ph-globe"></i>
-                        </div>
                         <div class="tray-clock" id="tray-clock">
                             <div id="clock-time" style="font-weight:600; font-size:14px;">12:00</div>
                             <div id="clock-date" style="font-size:10px; opacity:0.7">10 Oct</div>
@@ -66,77 +48,11 @@ export class Taskbar {
 
                 <div class="start-apps-section">
                     <div class="start-section-title">Applications</div>
-                    <div class="app-grid-container" id="app-grid">
-                        <div class="app-card" data-app="explorer" data-name="Explorer">
-                            <div class="app-icon-bg" style="background:#e8b339; color:white;">
-                                <i class="ph ph-folder" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Explorer</div>
-                        </div>
-                        <div class="app-card" data-app="texteditor" data-name="Text Editor">
-                            <div class="app-icon-bg" style="background:#1976d2; color:white;">
-                                <i class="ph ph-file-text" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Text Edit</div>
-                        </div>
-                        <div class="app-card" data-app="settings" data-name="Settings">
-                            <div class="app-icon-bg" style="background:#aaa; color:white;">
-                                <i class="ph ph-gear" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Settings</div>
-                        </div>
-                        <div class="app-card" data-app="cli" data-name="Terminal">
-                            <div class="app-icon-bg" style="background:#333; color:white;">
-                                <i class="ph ph-terminal-window" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Terminal</div>
-                        </div>
-                        <div class="app-card" data-app="taskmanager" data-name="Task Manager">
-                            <div class="app-icon-bg" style="background:#4caf50; color:white;">
-                                <i class="ph ph-chart-line" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Task Mgr</div>
-                        </div>
-                        <div class="app-card" data-app="media-app" data-name="Media Center">
-                            <div class="app-icon-bg" style="background:#ff4081; color:white;">
-                                <i class="ph ph-play-circle" style="font-size:28px;"></i>
-                            </div>
-                            <div class="app-name">Media</div>
-                        </div>
-                    </div>
+                    <div class="app-grid-container" id="app-grid"></div>
                 </div>
             </div>
 
-            <div id="control-center" class="popup-menu">
-                <h3 style="margin-top:0">Quick Settings</h3>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div style="width:60px; height:60px; background:#0078d4; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:5px; cursor:pointer;">
-                        <i class="ph ph-wifi-high" style="font-size:24px; color:white;"></i>
-                        <span style="font-size:10px; color:white;">WiFi</span>
-                    </div>
-                    <div style="width:60px; height:60px; background:#444; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:5px; cursor:pointer;">
-                        <i class="ph ph-bluetooth" style="font-size:24px; color:white;"></i>
-                        <span style="font-size:10px; color:white;">BT</span>
-                    </div>
-                </div>
-                <div class="wifi-list">
-                    <div style="font-size:12px; color:#888; margin-bottom:5px;">Available Networks</div>
-                    <div class="wifi-item active">
-                        <div class="wifi-info">
-                            <i class="ph ph-lock wifi-lock"></i>
-                            <span>MyHome_5G</span>
-                        </div>
-                        <i class="ph ph-wifi-high" style="font-size:16px; color:#0078d4;"></i>
-                    </div>
-                    <div class="wifi-item">
-                        <div class="wifi-info">
-                            <i class="ph ph-lock wifi-lock"></i>
-                            <span>Guest_Network</span>
-                        </div>
-                        <i class="ph ph-wifi-medium" style="font-size:16px; color:#aaa;"></i>
-                    </div>
-                </div>
-            </div>
+
 
             <div id="calendar-popup" class="popup-menu calendar-popup-enhanced">
                 <div class="datetime-header">
@@ -217,9 +133,13 @@ export class Taskbar {
             </div>
         `;
         container.insertAdjacentHTML('beforeend', html);
+        this.renderPinnedTaskbar();
+        this.renderStartMenuApps();
         this.attachListeners();
         this.startClock();
         this.renderCalendar(this.currentCalendarDate);
+        this.setupWindowListeners();
+        this.syncUserProfile();
     }
 
     static attachListeners() {
@@ -275,9 +195,7 @@ export class Taskbar {
             this.togglePopup('start-menu');
         });
 
-        document.getElementById('tray-network').addEventListener('click', () => {
-            this.togglePopup('control-center');
-        });
+
 
         document.getElementById('tray-clock').addEventListener('click', () => {
             this.togglePopup('calendar-popup');
@@ -342,12 +260,10 @@ export class Taskbar {
 
         const lockBtn = document.getElementById('lock-btn');
         if (lockBtn) {
-            lockBtn.addEventListener('click', () => {
+            lockBtn.addEventListener('click', async () => {
                 this.closeAllPopups();
-                const lockscreen = document.getElementById('lockscreen');
-                if (lockscreen) {
-                    lockscreen.style.display = 'flex';
-                }
+                const { LockScreen } = await import('../LockScreen/LockScreen.js');
+                await LockScreen.performLock();
             });
         }
 
@@ -748,5 +664,200 @@ export class Taskbar {
 
         icon.addEventListener('dblclick', () => this.openNewAppWindow(appId));
         desktop.appendChild(icon);
+    }
+
+    static renderPinnedTaskbar() {
+        const container = document.getElementById('taskbar-pinned');
+        if (!container) return;
+
+        const pinnedApps = AppRegistry.getTaskbarApps();
+        container.innerHTML = pinnedApps.map(app => `
+            <div class="taskbar-icon" id="icon-${app.id}" data-app="${app.id}" title="${app.name}">
+                <i class="ph ${this.getPhosphorIcon(app.id)}"></i>
+            </div>
+        `).join('');
+    }
+
+    static renderStartMenuApps() {
+        const grid = document.getElementById('app-grid');
+        if (!grid) return;
+
+        const apps = AppRegistry.getAllApps();
+        grid.innerHTML = apps.map(app => `
+            <div class="app-card" data-app="${app.id}" data-name="${app.name}">
+                <div class="app-icon-bg" style="background:${app.color || '#666'}; color:white;">
+                    <i class="ph ${this.getPhosphorIcon(app.id)}" style="font-size:28px;"></i>
+                </div>
+                <div class="app-name">${app.shortName || app.name}</div>
+            </div>
+        `).join('');
+
+        this.attachAppCardListeners();
+    }
+
+    static attachAppCardListeners() {
+        document.querySelectorAll('#app-grid .app-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const app = card.dataset.app;
+                if (app) {
+                    this.closeAllPopups();
+                    const instances = WindowManager.getInstances(app);
+                    if (instances.length > 0) {
+                        WindowManager.focusWindow(instances[0].id);
+                    } else {
+                        this.openNewAppWindow(app);
+                    }
+                }
+            });
+
+            card.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const app = card.dataset.app;
+                if (app) {
+                    this.closeAllPopups();
+                    this.openNewAppWindow(app);
+                }
+            });
+
+            card.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.selectedAppCard = card;
+                this.showAppContextMenu(e, card);
+            });
+        });
+    }
+
+    static async syncUserProfile() {
+        let username = 'User';
+        let status = 'Local Account';
+
+        try {
+            const res = await fetch('/api/settings/user');
+            const data = await res.json();
+            if (data.success && data.user) {
+                username = data.user.name || username;
+                status = data.user.status || status;
+            }
+        } catch (e) {
+            console.log('[Taskbar] Using default user profile');
+        }
+
+        const profileName = document.querySelector('.start-profile .profile-name');
+        const profileStatus = document.querySelector('.start-profile .profile-status');
+        if (profileName) profileName.textContent = username;
+        if (profileStatus) profileStatus.textContent = status;
+
+        const lsUsername = document.querySelector('.ls-username');
+        if (lsUsername) lsUsername.textContent = username;
+    }
+
+    static getPhosphorIcon(appId) {
+        const icons = {
+            'explorer': 'ph-folder',
+            'texteditor': 'ph-file-text',
+            'settings': 'ph-gear',
+            'cli': 'ph-terminal-window',
+            'taskmanager': 'ph-chart-line',
+            'media-app': 'ph-play-circle',
+            'game2048': 'ph-game-controller'
+        };
+        return icons[appId] || 'ph-app-window';
+    }
+
+    static setupWindowListeners() {
+        document.addEventListener('window:created', (e) => {
+            const { appType } = e.detail || {};
+            if (appType) {
+                this.updateTaskbarIndicators();
+                this.addDynamicIcon(appType);
+            }
+        });
+
+        document.addEventListener('window:closed', (e) => {
+            const { appType } = e.detail || {};
+            if (appType) {
+                this.updateTaskbarIndicators();
+                this.removeDynamicIconIfNeeded(appType);
+            }
+        });
+    }
+
+    static addDynamicIcon(appType) {
+        const pinnedIcon = document.getElementById(`icon-${appType}`);
+        if (pinnedIcon) return;
+
+        const dynamicContainer = document.getElementById('taskbar-dynamic');
+        if (!dynamicContainer) return;
+
+        if (dynamicContainer.querySelector(`[data-app="${appType}"]`)) return;
+
+        const app = AppRegistry.getApp(appType);
+        if (!app) return;
+
+        const icon = document.createElement('div');
+        icon.className = 'taskbar-icon open';
+        icon.id = `dynamic-icon-${appType}`;
+        icon.dataset.app = appType;
+        icon.title = app.name;
+        icon.innerHTML = `<i class="ph ${this.getPhosphorIcon(appType)}"></i>`;
+
+        const popup = document.createElement('div');
+        popup.className = 'window-preview-popup';
+        popup.id = `preview-${appType}`;
+        icon.appendChild(popup);
+
+        this.attachIconListeners(icon, appType, popup);
+        dynamicContainer.appendChild(icon);
+    }
+
+    static removeDynamicIconIfNeeded(appType) {
+        const instances = WindowManager.getInstances(appType);
+        if (instances.length === 0) {
+            const dynamicIcon = document.getElementById(`dynamic-icon-${appType}`);
+            if (dynamicIcon) {
+                dynamicIcon.remove();
+            }
+        }
+    }
+
+    static attachIconListeners(icon, appType, popup) {
+        icon.addEventListener('click', (e) => {
+            if (e.target.closest('.window-preview-popup')) return;
+            this.closeAllPopups();
+
+            const instances = WindowManager.getInstances(appType);
+            if (instances.length > 0) {
+                this.showWindowPreview(appType, popup, true);
+            } else {
+                this.openNewAppWindow(appType);
+            }
+        });
+
+        icon.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.window-preview-popup')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            popup.classList.remove('show');
+            this.openNewAppWindow(appType);
+        });
+
+        icon.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.selectedAppCard = { dataset: { app: appType, name: this.getAppName(appType) } };
+            this.showAppContextMenu(e, icon);
+        });
+
+        icon.addEventListener('mouseenter', () => {
+            this.showWindowPreview(appType, popup, false);
+        });
+
+        icon.addEventListener('mouseleave', () => {
+            if (!popup.dataset.forceOpen) {
+                popup.classList.remove('show');
+            }
+        });
     }
 }

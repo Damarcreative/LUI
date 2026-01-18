@@ -413,27 +413,75 @@ export class FilePickerDialog {
                 background: #ccc;
                 cursor: default;
             }
+
+            /* File Icon Colors - matching Explorer */
+            .fp-icon { font-size: 40px; }
+            .fp-icon.fp-icon-folder { color: #fdd835; }
+            .fp-icon.fp-icon-image { color: #888; }
+            .fp-icon.fp-icon-audio { color: #888; }
+            .fp-icon.fp-icon-video { color: #888; }
+            .fp-icon.fp-icon-archive { color: #888; }
+            .fp-icon.fp-icon-code { color: #64b5f6; }
+            .fp-icon.fp-icon-config { color: #ffb74d; }
+            .fp-icon.fp-icon-text { color: #90a4ae; }
+            .fp-icon.fp-icon-pdf { color: #e53935; }
+            .fp-icon.fp-icon-doc { color: #2196f3; }
+            .fp-icon.fp-icon-xls { color: #4caf50; }
+            .fp-icon.fp-icon-ppt { color: #ff7043; }
+            .fp-icon.fp-icon-file { color: #888; }
         `;
         document.head.appendChild(style);
     }
 
     static getIcon(isFolder, filename = '') {
         if (isFolder) {
-            return '<i class="ph ph-folder" style="color:#fdd835;"></i>';
+            return '<i class="ph ph-folder fp-icon fp-icon-folder"></i>';
         }
         const ext = filename.split('.').pop().toLowerCase();
-        const colors = {
-            'txt': '#666', 'md': '#666', 'log': '#666',
-            'js': '#f7df1e', 'ts': '#3178c6', 'json': '#f7df1e',
-            'html': '#e34c26', 'css': '#1572b6',
-            'py': '#3776ab', 'java': '#b07219',
-            'png': '#4caf50', 'jpg': '#4caf50', 'gif': '#4caf50', 'svg': '#4caf50',
-            'mp3': '#ff4081', 'mp4': '#ff4081', 'wav': '#ff4081',
-            'pdf': '#d32f2f', 'doc': '#2196f3', 'docx': '#2196f3',
-            'zip': '#ff9800', 'tar': '#ff9800', 'gz': '#ff9800'
-        };
-        const color = colors[ext] || '#999';
-        return `<i class="ph ph-file" style="color:${color};"></i>`;
+
+        if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+            return '<i class="ph ph-image fp-icon fp-icon-image"></i>';
+        }
+        if (['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac'].includes(ext)) {
+            return '<i class="ph ph-music-notes fp-icon fp-icon-audio"></i>';
+        }
+        if (['mp4', 'mkv', 'avi', 'webm', 'mov', 'wmv'].includes(ext)) {
+            return '<i class="ph ph-video fp-icon fp-icon-video"></i>';
+        }
+        if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)) {
+            return '<i class="ph ph-file-zip fp-icon fp-icon-archive"></i>';
+        }
+        if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+            return '<i class="ph ph-file-js fp-icon fp-icon-code"></i>';
+        }
+        if (['css', 'scss', 'sass', 'less'].includes(ext)) {
+            return '<i class="ph ph-file-css fp-icon fp-icon-code"></i>';
+        }
+        if (['html', 'htm', 'xml'].includes(ext)) {
+            return '<i class="ph ph-file-html fp-icon fp-icon-code"></i>';
+        }
+        if (['py', 'java', 'c', 'cpp', 'h', 'sh', 'rb', 'go', 'rs', 'php'].includes(ext)) {
+            return '<i class="ph ph-file-code fp-icon fp-icon-code"></i>';
+        }
+        if (['json', 'yaml', 'yml', 'toml', 'env'].includes(ext)) {
+            return '<i class="ph ph-file-code fp-icon fp-icon-config"></i>';
+        }
+        if (['txt', 'md', 'log', 'ini', 'conf', 'cfg'].includes(ext)) {
+            return '<i class="ph ph-file-text fp-icon fp-icon-text"></i>';
+        }
+        if (['pdf'].includes(ext)) {
+            return '<i class="ph ph-file-pdf fp-icon fp-icon-pdf"></i>';
+        }
+        if (['doc', 'docx', 'odt', 'rtf'].includes(ext)) {
+            return '<i class="ph ph-file-doc fp-icon fp-icon-doc"></i>';
+        }
+        if (['xls', 'xlsx', 'ods', 'csv'].includes(ext)) {
+            return '<i class="ph ph-file-xls fp-icon fp-icon-xls"></i>';
+        }
+        if (['ppt', 'pptx', 'odp'].includes(ext)) {
+            return '<i class="ph ph-file-ppt fp-icon fp-icon-ppt"></i>';
+        }
+        return '<i class="ph ph-file fp-icon fp-icon-file"></i>';
     }
 
     static async loadDirectory(path) {
@@ -604,27 +652,16 @@ export class FilePickerDialog {
             return;
         }
 
-
         items.sort((a, b) => {
             if (a.isFolder && !b.isFolder) return -1;
             if (!a.isFolder && b.isFolder) return 1;
             return a.name.localeCompare(b.name);
         });
 
-
         const filtered = this.showHidden ? items : items.filter(i => !i.name.startsWith('.'));
 
-
-        const finalItems = filtered.filter(item => {
-            if (item.isFolder) return true;
-            if (this.mode === 'folder') return true;
-            if (this.filters.length === 0) return true;
-            const ext = '.' + item.name.split('.').pop().toLowerCase();
-            return this.filters.some(f => f.toLowerCase() === ext);
-        });
-
-        grid.innerHTML = finalItems.map(item => {
-            const isDisabled = (this.mode === 'folder' && !item.isFolder);
+        grid.innerHTML = filtered.map(item => {
+            const isDisabled = this.isItemDisabled(item);
             return `
                 <div class="fp-item ${isDisabled ? 'disabled' : ''}" 
                      data-name="${item.name}" 
@@ -637,6 +674,23 @@ export class FilePickerDialog {
         }).join('');
 
         this.attachGridListeners();
+    }
+
+    static isItemDisabled(item) {
+        if (item.isFolder) {
+            return false;
+        }
+
+        if (this.mode === 'folder') {
+            return true;
+        }
+
+        if (this.filters.length === 0) {
+            return false;
+        }
+
+        const ext = '.' + item.name.split('.').pop().toLowerCase();
+        return !this.filters.some(f => f.toLowerCase() === ext);
     }
 
     static attachGridListeners() {

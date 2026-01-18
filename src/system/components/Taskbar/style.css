@@ -29,10 +29,34 @@
 .taskbar-center {
     flex: 1;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
     height: 100%;
     align-items: center;
+}
+
+.taskbar-pinned {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    height: 100%;
+}
+
+.taskbar-dynamic {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    height: 100%;
+    margin-left: 2px;
+    padding-left: 6px;
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.taskbar-dynamic:empty {
+    display: none;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
 }
 
 .taskbar-icon {
