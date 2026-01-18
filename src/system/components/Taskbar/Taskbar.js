@@ -15,27 +15,21 @@ export class Taskbar {
                     <div class="taskbar-center">
                         <div class="taskbar-icon" id="icon-explorer" data-app="explorer" title="File Explorer">
                             <i class="ph ph-folder"></i>
-                            <div class="instance-badge"></div>
                         </div>
                         <div class="taskbar-icon" id="icon-cli" data-app="cli" title="Terminal">
                             <i class="ph ph-terminal-window"></i>
-                            <div class="instance-badge"></div>
                         </div>
                         <div class="taskbar-icon" id="icon-settings" data-app="settings" title="Settings">
                             <i class="ph ph-gear"></i>
-                            <div class="instance-badge"></div>
                         </div>
                         <div class="taskbar-icon" id="icon-taskmanager" data-app="taskmanager" title="Task Manager">
                            <i class="ph ph-chart-line"></i>
-                           <div class="instance-badge"></div>
                         </div>
                         <div class="taskbar-icon" id="icon-media" data-app="media-app" title="Media Center">
                            <i class="ph ph-play-circle"></i>
-                           <div class="instance-badge"></div>
                         </div>
                         <div class="taskbar-icon" id="icon-texteditor" data-app="texteditor" title="Text Editor">
                             <i class="ph ph-file-text"></i>
-                            <div class="instance-badge"></div>
                         </div>
                     </div>
 

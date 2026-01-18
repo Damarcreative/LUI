@@ -4,7 +4,7 @@
   "arch": "x64",
   "osType": "Linux",
   "osRelease": "6.6.87.2-microsoft-standard-WSL2",
-  "uptime": 14612.57,
+  "uptime": 1860.24,
   "cpu": {
     "model": "Intel(R) Core(TM) i5-4300M CPU @ 2.60GHz",
     "cores": 2,
@@ -13,9 +13,9 @@
   },
   "memory": {
     "total": "3.8 GB",
-    "used": "694 MB",
-    "available": "3.1 GB",
-    "percentUsed": 18
+    "used": "657 MB",
+    "available": "3.2 GB",
+    "percentUsed": 17
   },
   "storage": [
     {
@@ -38,7 +38,7 @@
       {
         "name": "eth0",
         "address": "172.19.0.2",
-        "mac": "6a:e7:5e:84:85:f0"
+        "mac": "3a:59:57:d9:e9:17"
       }
     ]
   },
@@ -68,5 +68,5 @@
     "ethernet": true,
     "docker": true
   },
-  "collectedAt": "2026-01-17T16:59:47.633Z"
+  "collectedAt": "2026-01-18T03:37:14.068Z"
 }

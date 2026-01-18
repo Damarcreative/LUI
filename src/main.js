@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Mount UI Components
     // Mount UI Components
     // Order matters for Z-Index management
-    LockScreen.mount(app);  // Security: Only mount LockScreen first.
+    await LockScreen.mount(app);  // Security: Only mount LockScreen first.
 
     // Security: Desktop & Taskbar are only injected into DOM after successful unlock
     document.addEventListener('system:unlock', async () => {
@@ -46,27 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             Desktop.mount(app);     // Bottom layer
             Taskbar.mount(app);     // Top layer (UI)
 
-            // Activate Wallpaper - try server API first, then localStorage fallback
-            let desktopWallpaper = localStorage.getItem('desktop-wallpaper');
-
-            try {
-                const res = await fetch('/api/settings/wallpapers/current');
-                const data = await res.json();
-                if (data.success && data.wallpaper?.desktop) {
-                    desktopWallpaper = data.wallpaper.desktop;
-                    // Sync to localStorage for offline use
-                    localStorage.setItem('desktop-wallpaper', desktopWallpaper);
-                    if (data.wallpaper?.lockscreen) {
-                        localStorage.setItem('lockscreen-wallpaper', data.wallpaper.lockscreen);
-                    }
-                }
-            } catch (err) {
-                console.log('[System] Could not fetch wallpaper from server, using localStorage');
-            }
-
-            if (desktopWallpaper) {
-                document.body.style.backgroundImage = `url(${desktopWallpaper})`;
-            }
             document.body.classList.add('desktop-active');
 
             console.log('[System] Desktop environment mounted secure');

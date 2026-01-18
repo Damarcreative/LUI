@@ -4,14 +4,18 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('/wallpapers/Mountain.png') no-repeat center center/cover;
+    background: #1a1a2e no-repeat center center/cover;
     z-index: 100000;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #fff;
-    transition: all 0.5s ease;
+    transition: top 0.5s ease;
+}
+
+.lockscreen.lockscreen-loading {
+    background-color: #1a1a2e;
 }
 
 .lockscreen-overlay {
@@ -24,13 +28,36 @@
     background: rgba(0, 0, 0, 0.1);
 }
 
+.ls-loader {
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.ls-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.ls-loader-text {
+    font-size: 14px;
+    opacity: 0.7;
+    letter-spacing: 1px;
+}
+
 .ls-container {
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    animation: fadeIn 0.6s ease-out;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .ls-avatar {
@@ -80,7 +107,12 @@
     color: #333;
     outline: none;
     font-size: 15px;
-    transition: border 0.2s;
+    transition: border 0.2s, opacity 0.2s;
+}
+
+.ls-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .ls-enter-btn {
@@ -94,10 +126,20 @@
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.2);
     transition: all 0.2s;
+    position: relative;
 }
 
 .ls-enter-btn:hover {
     background: rgba(255, 255, 255, 0.4);
+}
+
+.ls-btn-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
 }
 
 .ls-options {
@@ -105,6 +147,21 @@
     font-size: 14px;
     opacity: 0.8;
     cursor: pointer;
+}
+
+.ls-error {
+    color: #ff6b6b;
+    font-size: 13px;
+    padding: 8px 16px;
+    background: rgba(255, 107, 107, 0.15);
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes shake {

@@ -146,17 +146,6 @@ export class Desktop {
 
             icon.addEventListener('click', (e) => {
                 e.stopPropagation();
-
-
-                const now = new Date().getTime();
-                if (icon.dataset.lastClick && (now - parseInt(icon.dataset.lastClick)) < 500) {
-                    const appId = icon.dataset.app;
-                    if (appId) AppRegistry.launch(appId);
-                    icon.dataset.lastClick = '0';
-                    return;
-                }
-                icon.dataset.lastClick = now.toString();
-
                 document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
                 icon.classList.add('selected');
             });
