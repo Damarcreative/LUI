@@ -532,8 +532,12 @@ export class Explorer {
         if (!state) return;
 
         const ext = filename.split('.').pop().toLowerCase();
-        const textExts = ['txt', 'md', 'js', 'css', 'html', 'json', 'xml', 'py', 'java', 'c', 'cpp', 'h', 'sh', 'conf', 'cfg', 'ini', 'log'];
         const fullPath = state.currentPath === '/' ? `/${filename}` : `${state.currentPath}/${filename}`;
+
+        const textExts = ['txt', 'md', 'js', 'css', 'html', 'json', 'xml', 'py', 'java', 'c', 'cpp', 'h', 'sh', 'conf', 'cfg', 'ini', 'log'];
+        const audioExts = ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac', 'wma', 'opus'];
+        const videoExts = ['mp4', 'mkv', 'avi', 'mov', 'webm', 'wmv', 'flv', 'm4v'];
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'ico'];
 
         if (textExts.includes(ext)) {
             const { TextEditor } = await import('../TextEditor/TextEditor.js');
@@ -548,8 +552,11 @@ export class Explorer {
             } catch (error) {
                 TextEditor.createNewInstance({ fileName: filename, filePath: fullPath, content: '' });
             }
+        } else if (audioExts.includes(ext) || videoExts.includes(ext) || imageExts.includes(ext)) {
+            const { MediaCenter } = await import('../MediaCenter/MediaCenter.js');
+            await MediaCenter.openFile(fullPath);
         } else {
-            WindowManager.toggleWindow('media-app');
+            console.log('[Explorer] Unknown file type:', ext);
         }
     }
 

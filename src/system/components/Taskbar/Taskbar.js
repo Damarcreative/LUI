@@ -25,7 +25,7 @@ export class Taskbar {
                         <div class="taskbar-icon" id="icon-taskmanager" data-app="taskmanager" title="Task Manager">
                            <i class="ph ph-chart-line"></i>
                         </div>
-                        <div class="taskbar-icon" id="icon-media" data-app="media-app" title="Media Center">
+                        <div class="taskbar-icon" id="icon-media-app" data-app="media-app" title="Media Center">
                            <i class="ph ph-play-circle"></i>
                         </div>
                         <div class="taskbar-icon" id="icon-texteditor" data-app="texteditor" title="Text Editor">

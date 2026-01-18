@@ -1,18 +1,23 @@
 {
   "preferences": {
-    "defaultView": "albums", 
+    "defaultView": "list",
     "shuffle": false,
-    "repeat": "none", 
-    "volume": 80
+    "repeat": "none",
+    "volume": 32,
+    "currentFilter": "all",
+    "sortBy": "name",
+    "lastPlayedPath": null
   },
   "window-state": {
-    "width": 1000,
-    "height": 700,
-    "x": 50,
-    "y": 50,
+    "width": 806,
+    "height": 473,
+    "x": 335,
+    "y": 32,
     "isMaximized": false
   },
   "library": {
-    "folders": ["~/Music", "~/Videos"]
+    "folders": [
+      "/home/user/Videos"
+    ]
   }
 }
